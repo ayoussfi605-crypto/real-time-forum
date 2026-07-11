@@ -1,11 +1,16 @@
-package main
+package handlers
 
-import "net/http"
+import (
+	"html/template"
+	"net/http"
+)
+
+var Template = template.Must(template.ParseFiles("static/index.html"))
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		// Render the sign-in page
-		http.ServeFile(w, r, "templates/signin.html")
+		Template.Execute(w, nil)
 		return
 	}
 	
