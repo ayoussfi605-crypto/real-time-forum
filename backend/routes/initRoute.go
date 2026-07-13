@@ -1,8 +1,9 @@
 package routes
 
 import (
-	"forum/handlers"
 	"net/http"
+
+	"forum/handlers"
 )
 
 func InitRoutes() *http.ServeMux {
