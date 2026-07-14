@@ -94,7 +94,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		generatedToken := uuid.New().String()
 
-		_, err = db.DB.Exec("INSERT INTO session (user_id, token, expiration_date) VALUES(? , ? , ?)", user.ID, generatedToken, time.Now().Add(24*time.Hour))
+		_, err = db.DB.Exec("INSERT INTO sessions (user_id, token, expiration_date) VALUES(? , ? , ?)", user.ID, generatedToken, time.Now().Add(24*time.Hour))
 		if err != nil {
 			helpers.SendJSON(w, http.StatusInternalServerError, "Could not create session")
 			return
@@ -111,6 +111,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		})
 		
 		helpers.SendJSON(w, http.StatusCreated, "succes")
+		return
 
 	}
+	// helpers.SendJSON(w, http.StatusMethodNotAllowed, "Method Not Allowed")
 }

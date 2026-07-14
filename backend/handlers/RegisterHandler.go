@@ -37,9 +37,11 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	input.FirstName = strings.TrimSpace(input.FirstName)
 	input.LastName = strings.TrimSpace(input.LastName)
 	input.Email = strings.TrimSpace(input.Email)
-
-	helpers.ValidateRegisterInput(input.Nickname, input.FirstName, input.LastName, input.Age, input.Gender, input.Email, input.Password, w)
-
+	
+	Isvalid:= helpers.ValidateRegisterInput(input.Nickname, input.FirstName, input.LastName, input.Age, input.Gender, input.Email, input.Password, w)
+	if !Isvalid{
+		return 
+	}
 	hashedPassword, err := helpers.HashPassword(input.Password, w)
 	if err != nil {
 		return
