@@ -20,6 +20,7 @@ type RegisterRequest struct {
 }
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	
 	if r.Method != http.MethodPost {
 		helpers.SendJSON(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return

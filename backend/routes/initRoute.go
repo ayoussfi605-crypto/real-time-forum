@@ -11,5 +11,7 @@ func InitRoutes() *http.ServeMux {
 
 	mux.HandleFunc("/register", handlers.RegisterHandler)
 	mux.HandleFunc("/login", handlers.LoginHandler)
+	mux.HandleFunc("/logout", handlers.LogoutHandler)
+	// mux.HandleFunc("/api/posts", middlewares.AuthMiddleware(handlers.CreatePostHandler))
 	return mux
 }

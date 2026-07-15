@@ -1,4 +1,4 @@
-ackage handlers
+package handlers
  
 import (
 	db "forum/database"
