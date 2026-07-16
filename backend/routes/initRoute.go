@@ -8,7 +8,7 @@ import (
 
 func InitRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
-
+	mux.Handle("/", http.FileServer(http.Dir("../static")))
 	mux.HandleFunc("/register", handlers.RegisterHandler)
 	mux.HandleFunc("/login", handlers.LoginHandler)
 	mux.HandleFunc("/logout", handlers.LogoutHandler)
