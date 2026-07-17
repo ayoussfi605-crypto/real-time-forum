@@ -1,11 +1,16 @@
 package middlewares
 
 import (
+	"context"
 	db "forum/database"
 	"forum/helpers"
 	"net/http"
 	"time"
 )
+
+
+type contextKey string
+const UserIDKey contextKey = "userID"
 
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -32,6 +37,8 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		next(w, r)
+		ctx := context.WithValue(r.Context(), UserIDKey, userID)
+		next(w, r.WithContext(ctx))
+
 	}
 }

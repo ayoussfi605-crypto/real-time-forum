@@ -1,6 +1,7 @@
+import { navigate } from "./navigate.js";
+import { setCurrentUser,getCurrentUser,clearCurrentUser ,isLoggedIn} from "./state.js";
 
-
-function renderSignIn(){
+export function renderSignIn(){
 
  document.getElementById("app").innerHTML =`
  <div class="header"><h1>Real-Time-Forum</h1></div>
@@ -16,6 +17,7 @@ function renderSignIn(){
  </form>
  <p>Don't have an account? <a href="#" id="go-signup">Sign Up</a></p>
  `;
+
 document.getElementById("go-signup").addEventListener("click", (e) =>{
     e.preventDefault();
      navigate("signup");
@@ -32,14 +34,36 @@ async function handleSignIn(e){
     const errorBox = document.getElementById("signin-error");
     errorBox.textContent = "";
     
-   let x = document.getElementById("identifier").value.trim()
-   let y = document.getElementById("password").value
+   const x = document.getElementById("identifier").value.trim()
+   const y = document.getElementById("password").value
    const data = {
        identifier: x,
        password: y
     };
- 
+
+  try {
+
+    const response = await fetch("/login",{
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        credentials: "include",
+        body: JSON.stringify(data),
+    })
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      errorBox.textContent = result.message ;
+      return;
+    }
+
+        setCurrentUser({ identifier: data.identifier })
+
+    navigate("feed");
+
+  } catch (err) {
+    errorBox.textContent = "Internal Server Error";
+    console.error(err);
+  }
    
 }
-
-// renderSignIn();

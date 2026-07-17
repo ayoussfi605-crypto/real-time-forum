@@ -1,7 +1,6 @@
-// signup.js
-// Registration form + fetch l /api/register
- 
-function renderSignUp() {
+import { navigate } from "./navigate.js";
+
+export function renderSignUp() {
 
 document.getElementById("app").innerHTML=`
     <div class="header">
@@ -67,7 +66,7 @@ async function handleSignUp(e){
   try{
     const response = await fetch("/register",{
         method: "POST",
-        headers: {"content-type":"applicaton/json"},
+        headers: {"Content-Type": "application/json"},
         credentials: "include",
         body: JSON.stringify(data),
         
@@ -77,19 +76,17 @@ async function handleSignUp(e){
     const result = await response.json();
 
     if (!response.ok){
-        errorBox.textContent = "error fetch data";
+        errorBox.textContent = result.message ;
         
         return;
     }
     alert("Tregister succec! you can login.");
-    navigate("signup");
+    navigate("signin");
   } catch(err){
     errorBox.textContent = "internal server error"
     console.error(err);
      
     
   }
- 
 
 }
-renderSignUp()
