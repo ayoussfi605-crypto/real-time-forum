@@ -40,7 +40,7 @@ document.getElementById("app").innerHTML=`
 
   document.getElementById("go-signin").addEventListener("click", (e) =>{
     e.preventDefault();
-     navigate("signup");
+     navigate("signin");
 });
 
 document.getElementById("signup-form").addEventListener("submit", handleSignUp);

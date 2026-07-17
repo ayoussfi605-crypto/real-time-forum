@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	db "forum/database"
 	"forum/helpers"
 	"forum/middlewares"
@@ -17,6 +18,7 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// hna khasek function jdida li kat-encode DATA (machi ghi message)
-	// ghadi n3tik l hint mn ba3d ila bghiti
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"nickname": nickname})
 }

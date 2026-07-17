@@ -17,7 +17,7 @@ export async function checkSession(){
         setCurrentUser(data);
         return true;
 
-    }catch{
+    }catch(err){
         console.error(err);
         return false;
     }

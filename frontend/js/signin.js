@@ -1,5 +1,6 @@
 import { navigate } from "./navigate.js";
-import { setCurrentUser,getCurrentUser,clearCurrentUser ,isLoggedIn} from "./state.js";
+import { setCurrentUser } from "./state.js";
+import { checkSession } from "./checkSession.js";
 
 export function renderSignIn(){
 
@@ -57,8 +58,7 @@ async function handleSignIn(e){
       return;
     }
 
-        setCurrentUser({ identifier: data.identifier })
-
+    await checkSession()
     navigate("feed");
 
   } catch (err) {
