@@ -1,47 +1,5 @@
 package handlers
 
-// Login
-// ↓
-// Check password
-// ↓
-// Generate UUID token
-// ↓
-// Insert token into sessions table
-// ↓
-// Send cookie
-// ↓
-// Browser stores cookie
-// ---------------------------
-// Frontend
-//  |
-//  POST /login
-//  |
-// {
-//  identifier:"ayoub",
-//  password:"12345678"
-// }
-//  |
-//  ▼
-// Go
-//  |
-//  ▼
-// Validate input
-//  |
-//  ▼
-// Find user by email OR nickname
-//  |
-//  ▼
-// bcrypt compare
-//  |
-//  ▼
-// Create session
-//  |
-//  ▼
-// Set cookie
-//  |
-//  ▼
-// Return success
-
 import (
 	"database/sql"
 	"encoding/json"
@@ -63,7 +21,7 @@ type LoginRequest struct {
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodPost {
-		// Handle login logic here
+
 		var input LoginRequest
 		err := json.NewDecoder(r.Body).Decode(&input)
 		if err != nil {
@@ -77,6 +35,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			helpers.SendJSON(w, http.StatusBadRequest, "Please fill all the fields")
 			return
 		}
+
 		user, err := db.GetUserByIdentifier(identifier)
 		if err != nil {
 			if err == sql.ErrNoRows {

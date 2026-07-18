@@ -6,21 +6,20 @@ import (
 )
 
 func ValidateRegisterInput(nickname string, firstName string, lastName string, age uint, gender string, email string, password string, w http.ResponseWriter)  bool{
-	// validate Gender
+	
 	if gender != "Male" && gender != "Female" {
 		SendJSON(w, http.StatusBadRequest, "Invalid gender. Please select 'Male' or 'Female'")
 		return false
 	}
 
-	// Validate the request data (you can add more validation as needed)
 	if nickname == "" || firstName == "" || lastName == "" ||
 		age <= 0 || age > 150 || gender == "" || email == "" || password == "" {
 		SendJSON(w, http.StatusBadRequest, "Please fill all the fields")
 		return false
 	}
 
-	if len(nickname) < 3 || len(nickname) > 20 || len(firstName) < 3 || len(firstName) > 20 || len(lastName) < 3 || len(lastName) > 20 {
-		SendJSON(w, http.StatusBadRequest, "Nickname, first name, and last name must be between 3 and 20 characters long")
+	if len(nickname) < 3 || len(nickname) > 50 || len(firstName) < 3 || len(firstName) > 50 || len(lastName) < 3 || len(lastName) > 50 {
+		SendJSON(w, http.StatusBadRequest, "Nickname, first name, and last name must be between 3 and 50 characters long")
 		return false
 	}
 	_, err := mail.ParseAddress(email)
