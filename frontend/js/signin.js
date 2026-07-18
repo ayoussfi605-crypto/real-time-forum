@@ -1,6 +1,7 @@
 import { navigate } from "./navigate.js";
 import { setCurrentUser } from "./state.js";
 import { checkSession } from "./checkSession.js";
+import { updateNavbar } from "./navbar.js";
 
 export function renderSignIn(){
 
@@ -59,6 +60,7 @@ async function handleSignIn(e){
     }
 
     await checkSession()
+    updateNavbar()
     navigate("feed");
 
   } catch (err) {
