@@ -13,7 +13,7 @@ func ValidateRegisterInput(nickname string, firstName string, lastName string, a
 	}
 
 	if nickname == "" || firstName == "" || lastName == "" ||
-		age <= 0 || age > 150 || gender == "" || email == "" || password == "" {
+		age <= 0 || age > 150 || email == "" || password == "" {
 		SendJSON(w, http.StatusBadRequest, "Please fill all the fields")
 		return false
 	}

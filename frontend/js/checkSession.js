@@ -1,27 +1,27 @@
+import { setCurrentUser, clearCurrentUser } from "./state.js";
 import { updateNavbar } from "./navbar.js";
-import { setCurrentUser } from "./state.js";
 
+export async function checkSession() {
+    try {
+        const response = await fetch("/me", {
+            credentials: "include",
+        });
 
-export async function checkSession(){
-
-    try{
-
-        const response = await fetch("/me", { credentials: "include" });
-        
-        if (!response.ok){
-            
-            return false
+        if (!response.ok) {
+            clearCurrentUser();
+            updateNavbar();
+            return false;
         }
-        
-        const data = await response.json()
-        
+
+        const data = await response.json();
         setCurrentUser(data);
-        updateNavbar()
+        updateNavbar();
         return true;
 
-    }catch(err){
+    } catch (err) {
+        clearCurrentUser();
+        updateNavbar();
         console.error(err);
         return false;
     }
-
 }

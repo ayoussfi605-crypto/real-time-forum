@@ -6,13 +6,13 @@ import { updateNavbar } from "./navbar.js";
 export function renderSignIn(){
 
  document.getElementById("app").innerHTML =`
- <div class="header"><h1>Real-Time-Forum</h1></div>
+ <div class="header"><h1>01_Forum</h1></div>
  <form id="signin-form">
  <label for="identifier">Nickname or Email:</label>
- <input  type="text" id="identifier" name="identifier" required>
+ <input  type="text" id="identifier" name="identifier" placeholder="Enter your identifier" required>
 
  <label for="password">Password:</label>
- <input  type="password" id="password" name="password" required>
+ <input  type="password" id="password" name="password" placeholder="Enter your password" required>
 
  <button type="submit">Sign In</button>
  <p id="signin-error" style="color:red;"></p>

@@ -1,23 +1,24 @@
 import { navigate } from "./navigate.js";
+import { validateRegister } from "./validateRegister.js";
 
 export function renderSignUp() {
 
 document.getElementById("app").innerHTML=`
     <div class="header">
-      <h1>Real-Time-Forum</h1>
+      <h1>01_Forum</h1>
     </div>
     <form id="signup-form">
       <label for="nickname">Nickname:</label>
-      <input type="text" id="nickname" name="nickname" required>
+      <input type="text" id="nickname" name="nickname" placeholder="Enter your nickname"  required>
  
       <label for="first_name">First Name:</label>
-      <input type="text" id="first_name" name="first_name" required>
+      <input type="text" id="first_name" name="first_name" placeholder="Enter your first name"required>
  
       <label for="last_name">Last Name:</label>
-      <input type="text" id="last_name" name="last_name" required>
+      <input type="text" id="last_name" name="last_name"  placeholder="Enter your last name" required>
  
       <label for="age">Age:</label>
-      <input type="number" id="age" name="age" min="1" required>
+      <input type="number" id="age" name="age" min="1" placeholder="Enter your age" min="1" required>
  
       <label for="gender">Gender:</label>
       <select id="gender" name="gender" required>
@@ -27,10 +28,10 @@ document.getElementById("app").innerHTML=`
       </select>
  
       <label for="email">Email:</label>
-      <input type="email" id="email" name="email" required>
+      <input type="email" id="email" name="email" placeholder="Enter your email" required>
  
       <label for="password">Password:</label>
-      <input type="password" id="password" name="password" required>
+      <input type="password" id="password" name="password" placeholder="Enter your password" required>
  
       <button type="submit">Sign Up</button>
       <p id="signup-error" style="color:red;"></p>
@@ -62,6 +63,12 @@ async function handleSignUp(e){
     password: document.getElementById("password").value,
   };
  
+  const error = validateRegister(data);
+
+  if (error) {
+    errorBox.textContent = error;
+    return;
+  }
 
   try{
     const response = await fetch("/register",{
