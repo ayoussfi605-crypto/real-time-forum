@@ -7,10 +7,10 @@
 
 body {
   font-family: "Segoe UI", Arial, sans-serif;
-     background-color:white;
-    overflow: hidden; 
+  background-color:white;
+  overflow: hidden; 
   color: #1e2530;
-  line-height: 1.5;
+  line-height: 0.8;
 }
 
 .hidden {

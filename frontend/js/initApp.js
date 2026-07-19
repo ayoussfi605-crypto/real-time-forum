@@ -9,6 +9,7 @@ async function initApp() {
     const loggedIn = await checkSession();
 
     if (loggedIn) {
+        //setup ws
         updateNavbar()
         navigate("feed");
     } else {

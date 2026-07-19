@@ -5,15 +5,17 @@ export function validateRegister(data) {
     }
 
     if (
-        data.nickname === "" ||
-        data.first_name === "" ||
-        data.last_name === "" ||
-        data.age <= 0 ||
-        data.age > 150 ||
-        data.email === "" ||
-        data.password === ""
+    !data.nickname ||
+    !data.first_name ||
+    !data.last_name ||
+    !data.email ||
+    !data.password ||
+    !data.confirmpassword
     ) {
-        return "Please fill all the fields";
+    return "Please fill all the fields";
+    }
+    if(data.age < 9 || data.age > 150){
+        return "age must be between 9 and 150"
     }
 
     if (
@@ -27,7 +29,7 @@ export function validateRegister(data) {
     if (data.password.length < 8 || data.password.length > 50) {
         return "Password must be between 8 and 50 characters long";
     }
-    if (data.password !== data.confirm_password) {
+    if (data.password !== data.confirmpassword) {
     return "Passwords do not match";
     }
 

@@ -11,6 +11,7 @@ func InitRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServer(http.Dir("../frontend")))
 	mux.HandleFunc("/me", middlewares.AuthMiddleware(handlers.MeHandler))
+	// /ws (identify hub conn)
 	mux.HandleFunc("/register", handlers.RegisterHandler)
 	mux.HandleFunc("/login", handlers.LoginHandler)
 	mux.HandleFunc("/logout", handlers.LogoutHandler)
