@@ -22,7 +22,7 @@ export function renderSignIn(){
 
 document.getElementById("go-signup").addEventListener("click", (e) =>{
     e.preventDefault();
-     navigate("signup");
+     navigate("signup")
 
 });
 
