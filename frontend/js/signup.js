@@ -34,15 +34,15 @@ export function renderSignUp() {
   <label for="password">Password:</label>
   <input type="password" id="password" name="password" placeholder="Enter your password" required>
   
-  <label for="confirmpassword">confirmpassword:</label>
-  <input type="password" id="confirmpassword" name="confirmpassword" placeholder="confirm your password" required>
+  <label for="confirm_password">confirm_password:</label>
+  <input type="password" id="confirm_password" name="confirm_password" placeholder="confirm your password" required>
   
   <button type="submit">Sign Up</button>
   <p id="signup-error" style="color:red;"></p>
   </form>
   <p>Already have an account? <a href="#" id="go-signin">Sign In</a></p>
   `;
-
+  
   document.getElementById("go-signin").addEventListener("click", (e) =>{
     e.preventDefault();
      navigate("signin");
@@ -65,7 +65,7 @@ async function handleSignUp(e){
     gender: document.getElementById("gender").value,
     email: document.getElementById("email").value.trim(),
     password: document.getElementById("password").value,
-    confirmpassword: document.getElementById("confirmpassword").value,
+    confirm_password: document.getElementById("confirm_password").value,
   };
  
   const error = validateRegister(data);

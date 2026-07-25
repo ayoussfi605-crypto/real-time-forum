@@ -10,7 +10,7 @@ export function validateRegister(data) {
     !data.last_name ||
     !data.email ||
     !data.password ||
-    !data.confirmpassword
+    !data.confirm_password
     ) {
     return "Please fill all the fields";
     }
@@ -29,7 +29,7 @@ export function validateRegister(data) {
     if (data.password.length < 8 || data.password.length > 50) {
         return "Password must be between 8 and 50 characters long";
     }
-    if (data.password !== data.confirmpassword) {
+    if (data.password !== data.confirm_password) {
     return "Passwords do not match";
     }
 
