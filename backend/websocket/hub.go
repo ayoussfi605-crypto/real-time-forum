@@ -1,10 +1,39 @@
 package ws
 
 import (
+	db "forum/database"
+	"log"
 	"sync"
 
 	"github.com/gorilla/websocket"
 )
+
+// Ayoub
+//    │
+//    │ ws.send()
+//    ▼
+// ReadPump()
+//    │
+//    ▼
+// IncomingMessage
+//    │
+//    ▼
+// HandleMessage()
+//    │
+//    ├──────────────┐
+//    │              │
+//    ▼              ▼
+// Save DB      Find Receiver
+//                   │
+//                   │
+//            clients[ReceiverID]
+//                   │
+//           ┌───────┴────────┐
+//           │                │
+//       Online           Offline
+//           │                │
+//           ▼                ▼
+// WriteJSON()         Do nothing
 
 // Client kaymtl user wa7d connecté
 type Client struct {
@@ -37,4 +66,26 @@ func (h *Hub) RemoveClient(userID int) {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
 	delete(h.clients, userID)
+}
+
+func (h *Hub) HandleMessage(msg IncomingMessage) {
+	_, err := db.DB.Exec(
+		"INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)",
+		msg.SenderID, msg.ReceiverID, msg.Content,
+	)
+	if err != nil {
+		log.Println(err)
+	}
+
+	h.mutex.Lock()
+	client, ok := h.clients[msg.ReceiverID]
+	h.mutex.Unlock()
+
+	if ok {
+		// Receiver online -> sift-lih message mباشرة
+		err := client.conn.WriteJSON(msg)
+		if err != nil {
+			log.Println("write error:", err)
+		}
+	}
 }
