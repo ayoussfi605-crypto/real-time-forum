@@ -44,7 +44,7 @@ type Client struct {
 // Hub howa dfter l3anawin: kayhtafed b ga3 les clients connectés
 type Hub struct {
 	clients map[int]*Client //(userID -> Client)
-	mutex   sync.Mutex
+	mutex   sync.RWMutex
 }
 
 func NewHub() *Hub {
@@ -77,9 +77,9 @@ func (h *Hub) HandleMessage(msg IncomingMessage) {
 		log.Println(err)
 	}
 
-	h.mutex.Lock()
+	h.mutex.RLock()
 	client, ok := h.clients[msg.ReceiverID]
-	h.mutex.Unlock()
+	h.mutex.RUnlock()
 
 	if ok {
 		// Receiver online -> sift-lih message mباشرة

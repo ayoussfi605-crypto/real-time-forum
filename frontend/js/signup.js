@@ -97,8 +97,8 @@ async function handleSignUp(e){
   } catch(err){
     errorBox.textContent = "internal server error"
     console.error(err);
-     
     
+     
   }
 
 }

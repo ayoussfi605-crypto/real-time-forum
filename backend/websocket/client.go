@@ -29,9 +29,9 @@ func (c *Client) ReadPump(hub *Hub) {
 			log.Println("invalid message:", err)
 			continue
 		}
-
 		// Never trust the client for the sender ID
 		msg.SenderID = c.userID
+		log.Printf("Message received: %+v\n", msg)
 
 		hub.HandleMessage(msg)
 	}

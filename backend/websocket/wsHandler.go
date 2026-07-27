@@ -33,8 +33,6 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 	// 4. Zido l Hub (AddClient)
 	hub.AddClient(userID, client)
-	// <- kaytnfed automatiquement mlli function tsali (b return wla panic)
-	defer hub.RemoveClient(userID)   
 	// 5. TODO (khotwa jaya): bda reading loop bach ne9raw messages jayin mn had client
 	client.ReadPump(hub)
 }
