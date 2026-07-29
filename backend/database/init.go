@@ -17,9 +17,18 @@ func Init() error {
 	if err != nil {
 		return fmt.Errorf("open database: %w", err)
 	}
-	DB.SetMaxOpenConns(1) 
-	if _, err = DB.Exec("PRAGMA foreign_keys = ON"); err != nil {
-		return fmt.Errorf("enable foreign keys: %w", err)
+	// NOTE: MaxOpenConns(1) here would deadlock any handler that opens a
+	// second query while the first is still open (e.g. fetching categories
+	// for each post in a loop). Allow a small pool instead, and use WAL mode
+	// so concurrent reads/writes on SQLite are safe.
+	DB.SetMaxOpenConns(10) // Allow up to 10 simultaneous database connections
+
+	// Enable WAL mode (Write-Ahead Logging) to allow reading and writing at the same time safely
+	if _, err = DB.Exec("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON"); err != nil {
+		return fmt.Errorf("enable WAL/foreign keys: %w", err)
+	}
+	if _, err = DB.Exec("PRAGMA journal_mode = WAL"); err != nil {
+		return fmt.Errorf("enable WAL mode: %w", err)
 	}
 
 	if err = DB.Ping(); err != nil {

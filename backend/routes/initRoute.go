@@ -15,6 +15,17 @@ func InitRoutes() *http.ServeMux {
 	mux.HandleFunc("/register", handlers.RegisterHandler)
 	mux.HandleFunc("/login", handlers.LoginHandler)
 	mux.HandleFunc("/logout", handlers.LogoutHandler)
-	// mux.HandleFunc("/api/posts", middlewares.AuthMiddleware(handlers.CreatePostHandler))
+
+	// Posts
+	mux.HandleFunc("GET /api/posts", handlers.GetPostsHandler)
+	mux.HandleFunc("POST /api/posts", middlewares.AuthMiddleware(handlers.CreatePostHandler))
+	mux.HandleFunc("GET /api/posts/{id}", handlers.GetPostByIDHandler)
+
+	// Comments
+	mux.HandleFunc("POST /api/posts/{id}/comments", middlewares.AuthMiddleware(handlers.CreateCommentHandler))
+
+	// Categories (needed by the "new post" form to know what's selectable)
+	mux.HandleFunc("GET /api/categories", handlers.GetCategoriesHandler)
+
 	return mux
 }
