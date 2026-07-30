@@ -8,6 +8,30 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+
+        //      Ayoub Browser
+        //           │
+        //           │
+        // socket.send(msg)
+        //           │
+        //           ▼
+        // ┌──────────────────┐
+        // │   Go Backend      │
+        // │──────────────────│
+        // │ ServeWs          │
+        // │ ReadPump         │
+        // │ HandleMessage    │
+        // │ Save SQLite      │
+        // │ Find Receiver    │
+        // │ WriteJSON        │
+        // └──────────────────┘
+        //           │
+        //           ▼
+        // socket.onmessage(...)
+        //           │
+        //           ▼
+        //      Sara Browser
+
 // upgrader: l config li khass l "tarjama" mn HTTP l WebSocket
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {

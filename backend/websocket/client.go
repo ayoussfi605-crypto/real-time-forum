@@ -11,6 +11,51 @@ type IncomingMessage struct {
 	Content    string `json:"content"`
 }
 
+// Client connect
+//       │
+//       ▼
+// ServeWs()
+//       │
+//       ▼
+// Upgrade HTTP -> WebSocket
+//       │
+//       ▼
+// Create Client
+//       │
+//       ▼
+// AddClient()
+//       │
+//       ▼
+// ReadPump()
+//       │
+//       ▼
+// ReadMessage()
+//       │
+//       ▼
+// json.Unmarshal()
+//       │
+//       ▼
+// msg.SenderID = c.userID
+//       │
+//       ▼
+// HandleMessage()
+//       │
+//       ├───────────────┐
+//       │               │
+//       ▼               ▼
+//  Save SQLite     Find Receiver
+//                       │
+//                       ▼
+//              clients[ReceiverID]
+//                       │
+//              ┌────────┴─────────┐
+//              │                  │
+//           Online            Offline
+//              │                  │
+//              ▼                  ▼
+//        WriteJSON()      Do Nothing
+
+
 func (c *Client) ReadPump(hub *Hub) {
 	defer hub.RemoveClient(c.userID)
 	defer c.conn.Close()

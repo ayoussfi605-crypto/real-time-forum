@@ -5,11 +5,13 @@ import (
 	db "forum/database"
 	"forum/helpers"
 	"forum/middlewares"
+	"log"
 	"net/http"
 )
 
 func MeHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(middlewares.UserIDKey).(int)
+	log.Println(userID)
 
 	var nickname string
 	err := db.DB.QueryRow("SELECT nickname FROM users WHERE id = ?", userID).Scan(&nickname)
