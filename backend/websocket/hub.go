@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"fmt"
 	db "forum/database"
 	"log"
 	"sync"
@@ -38,10 +39,11 @@ import (
 // Client kaymtl user wa7d connecté
 type Client struct {
 	userID int
-	conn   *websocket.Conn
+	conn   *websocket.Conn   
 }
 
 // Hub howa dfter l3anawin: kayhtafed b ga3 les clients connectés
+
 type Hub struct {
 	clients map[int]*Client //(userID -> Client)
 	mutex   sync.RWMutex
@@ -69,16 +71,17 @@ func (h *Hub) RemoveClient(userID int) {
 }
 
 func (h *Hub) HandleMessage(msg IncomingMessage) {
+	fmt.Println("msg", msg)
 	_, err := db.DB.Exec(
 		"INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)",
-		msg.SenderID, msg.ReceiverID, msg.Content,
+		msg.Data.SenderID, msg.Data.ReceiverID, msg.Data.Content,
 	)
 	if err != nil {
 		log.Println(err)
 	}
 
 	h.mutex.RLock()
-	client, ok := h.clients[msg.ReceiverID]
+	client, ok := h.clients[msg.Data.ReceiverID]
 	h.mutex.RUnlock()
 
 	if ok {

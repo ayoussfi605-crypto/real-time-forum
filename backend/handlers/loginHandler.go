@@ -51,6 +51,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			helpers.SendJSON(w, http.StatusBadRequest, "Invalid credentials")
 			return
 		}
+		//delete olds sessions
+		_, err = db.DB.Exec("DELETE FROM sessions WHERE user_id = ?", user.ID)
+		if err != nil {
+			helpers.SendJSON(w, http.StatusInternalServerError, "Could not remove old session")
+			return
+		}
+
 		generatedToken := uuid.New().String()
 
 		_, err = db.DB.Exec("INSERT INTO sessions (user_id, token, expiration_date) VALUES(? , ? , ?)", user.ID, generatedToken, time.Now().Add(24*time.Hour))
@@ -68,7 +75,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			SameSite: http.SameSiteStrictMode,
 			MaxAge:   24 * 60 * 60,
 		})
-		
+
 		helpers.SendJSON(w, http.StatusCreated, "succes")
 		return
 

@@ -1,19 +1,16 @@
-let socket = null;
-let onMessageCallback = null;   
+let socket = null; 
 
-export function connectSocket(onMessageReceived) {   
+export function connectSocket() {   
   socket = new WebSocket("ws://localhost:8080/ws");
-  onMessageCallback = onMessageReceived;
 
   socket.onopen = () => {
     console.log("WebSocket connected");
+    sendMessage(2, "Salam");
   };
+
 
   socket.onmessage = (event) => {
     const msg = JSON.parse(event.data);
-    if (onMessageCallback) {
-      onMessageCallback(msg);  
-    }
   };
 
   socket.onclose = () => {
@@ -26,6 +23,22 @@ export function connectSocket(onMessageReceived) {
 }
 
 export function sendMessage(receiverID, content) {
-  const messageData = { receiver_id: receiverID, content: content };
-  socket.send(JSON.stringify(messageData));
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+        console.log("Socket not connected");
+        return;
+    }
+
+    const message = {
+        event_type: "private_message",
+        data: {
+            receiver_id: receiverID,
+            content: content,
+        },
+    };
+
+    console.log("Sending:", message);
+
+    socket.send(JSON.stringify(message));
 }
+ 
+window.sendMessage = sendMessage;

@@ -8,6 +8,8 @@ import (
 	ws "forum/websocket"
 )
 
+
+
 func InitRoutes(hub *ws.Hub) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServer(http.Dir("../frontend")))

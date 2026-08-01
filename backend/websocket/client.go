@@ -4,57 +4,16 @@ import (
 	"encoding/json"
 	"log"
 )
-
-type IncomingMessage struct {
+type IncomingData struct {
 	SenderID   int    `json:"sender_id"`
 	ReceiverID int    `json:"receiver_id"`
 	Content    string `json:"content"`
 }
 
-// Client connect
-//       │
-//       ▼
-// ServeWs()
-//       │
-//       ▼
-// Upgrade HTTP -> WebSocket
-//       │
-//       ▼
-// Create Client
-//       │
-//       ▼
-// AddClient()
-//       │
-//       ▼
-// ReadPump()
-//       │
-//       ▼
-// ReadMessage()
-//       │
-//       ▼
-// json.Unmarshal()
-//       │
-//       ▼
-// msg.SenderID = c.userID
-//       │
-//       ▼
-// HandleMessage()
-//       │
-//       ├───────────────┐
-//       │               │
-//       ▼               ▼
-//  Save SQLite     Find Receiver
-//                       │
-//                       ▼
-//              clients[ReceiverID]
-//                       │
-//              ┌────────┴─────────┐
-//              │                  │
-//           Online            Offline
-//              │                  │
-//              ▼                  ▼
-//        WriteJSON()      Do Nothing
-
+type IncomingMessage struct {
+	EventType string       `json:"event_type"`
+	Data      IncomingData `json:"data"`
+}
 
 func (c *Client) ReadPump(hub *Hub) {
 	defer hub.RemoveClient(c.userID)
@@ -63,20 +22,22 @@ func (c *Client) ReadPump(hub *Hub) {
 	for {
 		var msg IncomingMessage
 
-		_, p, err := c.conn.ReadMessage()
+		_, payload, err := c.conn.ReadMessage()
 		if err != nil {
 			log.Println("read error:", err)
 			break
 		}
 
-		err = json.Unmarshal(p, &msg)
-		if err != nil {
+		if err := json.Unmarshal(payload, &msg); err != nil {
 			log.Println("invalid message:", err)
 			continue
 		}
-		// Never trust the client for the sender ID
-		msg.SenderID = c.userID
-		log.Printf("Message received: %+v\n", msg)
+
+		// Never trust the client for the sender ID.
+		// Always use the authenticated user's ID.
+		msg.Data.SenderID = c.userID
+
+		log.Printf("Received %q: %+v\n", msg.EventType, msg.Data)
 
 		hub.HandleMessage(msg)
 	}
