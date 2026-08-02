@@ -1,12 +1,17 @@
 package ws
 
 import (
-	"fmt"
 	db "forum/database"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
+)
+
+const (
+	writeWait  = 10 * time.Second
+	maxMsgSize = 4096
 )
 
 // Ayoub
@@ -36,42 +41,54 @@ import (
 //           ▼                ▼
 // WriteJSON()         Do nothing
 
-// Client kaymtl user wa7d connecté
 type Client struct {
 	userID int
-	conn   *websocket.Conn   
+	conn   *websocket.Conn
+	mutex  sync.Mutex 
 }
 
-// Hub howa dfter l3anawin: kayhtafed b ga3 les clients connectés
+
+func (c *Client) SafeWriteJSON(v interface{}) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+	return c.conn.WriteJSON(v)
+}
+
 
 type Hub struct {
-	clients map[int]*Client //(userID -> Client)
+	clients map[int]map[*Client]bool 
 	mutex   sync.RWMutex
 }
 
 func NewHub() *Hub {
-
 	return &Hub{
-		clients: make(map[int]*Client),
+		clients: make(map[int]map[*Client]bool),
 	}
 }
 
 func (h *Hub) AddClient(userID int, client *Client) {
-
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
-	h.clients[userID] = client
+
+	if h.clients[userID] == nil {
+		h.clients[userID] = make(map[*Client]bool)
+	}
+	h.clients[userID][client] = true
 }
 
-func (h *Hub) RemoveClient(userID int) {
-
+func (h *Hub) RemoveClient(userID int, client *Client) {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
-	delete(h.clients, userID)
+
+	delete(h.clients[userID], client)
+	if len(h.clients[userID]) == 0 {
+		delete(h.clients, userID) 
+	}
 }
 
 func (h *Hub) HandleMessage(msg IncomingMessage) {
-	fmt.Println("msg", msg)
 	_, err := db.DB.Exec(
 		"INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)",
 		msg.Data.SenderID, msg.Data.ReceiverID, msg.Data.Content,
@@ -81,13 +98,11 @@ func (h *Hub) HandleMessage(msg IncomingMessage) {
 	}
 
 	h.mutex.RLock()
-	client, ok := h.clients[msg.Data.ReceiverID]
+	receiverClients := h.clients[msg.Data.ReceiverID]
 	h.mutex.RUnlock()
 
-	if ok {
-		// Receiver online -> sift-lih message mباشرة
-		err := client.conn.WriteJSON(msg)
-		if err != nil {
+	for c := range receiverClients {
+		if err := c.SafeWriteJSON(msg); err != nil { 
 			log.Println("write error:", err)
 		}
 	}

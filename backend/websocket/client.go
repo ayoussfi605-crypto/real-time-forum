@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 )
+
 type IncomingData struct {
 	SenderID   int    `json:"sender_id"`
 	ReceiverID int    `json:"receiver_id"`
@@ -16,8 +17,10 @@ type IncomingMessage struct {
 }
 
 func (c *Client) ReadPump(hub *Hub) {
-	defer hub.RemoveClient(c.userID)
+	defer hub.RemoveClient(c.userID, c) 
 	defer c.conn.Close()
+
+	c.conn.SetReadLimit(maxMsgSize)
 
 	for {
 		var msg IncomingMessage
