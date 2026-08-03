@@ -12,7 +12,7 @@ var DB *sql.DB
 
 func Init() error {
 	var err error
-
+	// start connection whit database 
 	DB, err = sql.Open("sqlite3", "./database/forum.db")
 	if err != nil {
 		return fmt.Errorf("open database: %w", err)

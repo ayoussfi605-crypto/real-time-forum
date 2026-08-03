@@ -101,7 +101,7 @@ func (h *Hub) HandleMessage(msg IncomingMessage) {
 	receiverClients := h.clients[msg.Data.ReceiverID]
 	h.mutex.RUnlock()
 
-	for c := range receiverClients {
+	for c := range receiverClients {	
 		if err := c.SafeWriteJSON(msg); err != nil { 
 			log.Println("write error:", err)
 		}

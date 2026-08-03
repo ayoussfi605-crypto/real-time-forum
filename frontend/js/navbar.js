@@ -6,7 +6,7 @@ export function hideNavbar() {
 
   if (navbar) {
     navbar.classList.add("hidden");
-  document.getElementById("navbar").style.display = "none";}
+  }
 }
 
 export function updateNavbar() {

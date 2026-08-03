@@ -54,10 +54,10 @@ async function handleSignIn(e){
 
     const result = await response.json();
 
-    if (!response.ok) {
-      errorBox.textContent = result.message ;
-      return;
-    }
+  if (!response.ok) {
+    errorBox.textContent = result.message;
+    return;
+  }
 
     await checkSession()
     updateNavbar()

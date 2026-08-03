@@ -17,7 +17,7 @@ type IncomingMessage struct {
 }
 
 func (c *Client) ReadPump(hub *Hub) {
-	defer hub.RemoveClient(c.userID, c) 
+	defer hub.RemoveClient(c.userID, c)
 	defer c.conn.Close()
 
 	c.conn.SetReadLimit(maxMsgSize)
@@ -35,10 +35,12 @@ func (c *Client) ReadPump(hub *Hub) {
 			log.Println("invalid message:", err)
 			continue
 		}
-
 		// Never trust the client for the sender ID.
 		// Always use the authenticated user's ID.
 		msg.Data.SenderID = c.userID
+		if msg.Data.SenderID == msg.Data.ReceiverID {
+			continue
+		}
 
 		log.Printf("Received %q: %+v\n", msg.EventType, msg.Data)
 

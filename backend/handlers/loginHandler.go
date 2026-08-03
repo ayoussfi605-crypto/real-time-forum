@@ -76,9 +76,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			MaxAge:   24 * 60 * 60,
 		})
 
-		helpers.SendJSON(w, http.StatusCreated, "succes")
+		helpers.SendJSON(w, http.StatusOK, "Login successful")
 		return
 
 	}
-	// helpers.SendJSON(w, http.StatusMethodNotAllowed, "Method Not Allowed")
+	helpers.SendJSON(w, http.StatusMethodNotAllowed, "Method Not Allowed")
 }
