@@ -12,12 +12,12 @@ var DB *sql.DB
 
 func Init() error {
 	var err error
-	// start connection whit database 
+	// open db and start connection whit database 
 	DB, err = sql.Open("sqlite3", "./database/forum.db")
 	if err != nil {
 		return fmt.Errorf("open database: %w", err)
 	}
-	DB.SetMaxOpenConns(1) 
+	 
 	if _, err = DB.Exec("PRAGMA foreign_keys = ON"); err != nil {
 		return fmt.Errorf("enable foreign keys: %w", err)
 	}
