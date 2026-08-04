@@ -29,20 +29,26 @@ export function updateNavbar() {
     navbar.style.display = "none";
   }
 }
-
+//export function setupLogout() {
 export function setupLogout() {
   document.getElementById("logout-btn").addEventListener("click", async () => {
     try {
-      const response = await fetch("/logout", { credentials: "include", method: "POST" });
+      const response = await fetch("/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
       if (!response.ok) {
-        console.error("Logout failed on server, clearing local state anyway");
+        console.error("Logout failed");
+        return;
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
+
       clearCurrentUser();
       updateNavbar();
       navigate("signin");
+
+    } catch (err) {
+      console.error(err);
     }
   });
 }
