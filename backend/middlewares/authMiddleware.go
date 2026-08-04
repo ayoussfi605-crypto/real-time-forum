@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-
 type contextKey string
+
 const UserIDKey contextKey = "userID"
 
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
@@ -22,7 +22,7 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		var userID int
-		var expiresAt time.Time 
+		var expiresAt time.Time
 		err = db.DB.QueryRow(
 			`SELECT user_id, expiration_date FROM sessions WHERE token = ?`,
 			cookie.Value,
@@ -36,7 +36,8 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			helpers.SendJSON(w, http.StatusUnauthorized, "Session expired")
 			return
 		}
-
+		// contex transfer the user_id to handlers
+		// stor user_id in UserIDKey key
 		ctx := context.WithValue(r.Context(), UserIDKey, userID)
 		next(w, r.WithContext(ctx))
 

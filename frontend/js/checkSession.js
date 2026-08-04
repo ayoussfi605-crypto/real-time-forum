@@ -6,7 +6,7 @@ export async function checkSession() {
         const response = await fetch("/me", {
             credentials: "include",
         });
-
+        
         if (!response.ok) {
             clearCurrentUser();
             updateNavbar();

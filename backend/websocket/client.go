@@ -35,6 +35,10 @@ func (c *Client) ReadPump(hub *Hub) {
 			log.Println("invalid message:", err)
 			continue
 		}
+		if msg.Data.Content == "" {
+			continue
+			
+		}
 		// Never trust the client for the sender ID.
 		// Always use the authenticated user's ID.
 		msg.Data.SenderID = c.userID

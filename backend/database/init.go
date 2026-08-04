@@ -17,11 +17,12 @@ func Init() error {
 	if err != nil {
 		return fmt.Errorf("open database: %w", err)
 	}
-	 
+	// the default pragma is off 
 	if _, err = DB.Exec("PRAGMA foreign_keys = ON"); err != nil {
 		return fmt.Errorf("enable foreign keys: %w", err)
 	}
 
+	// check if connected in db
 	if err = DB.Ping(); err != nil {
 		return fmt.Errorf("ping database: %w", err)
 	}
@@ -39,6 +40,7 @@ func Init() error {
 	return nil
 }
 
+// defer close
 func Close() error {
 	if DB != nil {
 		return DB.Close()

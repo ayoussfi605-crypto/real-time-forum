@@ -95,6 +95,7 @@ func (h *Hub) HandleMessage(msg IncomingMessage) {
 	)
 	if err != nil {
 		log.Println(err)
+		return 
 	}
 
 	h.mutex.RLock()
