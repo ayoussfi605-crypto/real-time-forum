@@ -9,7 +9,7 @@ import (
 )
 
 type contextKey string
-
+// deff key to store the user_id  
 const UserIDKey contextKey = "userID"
 
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {

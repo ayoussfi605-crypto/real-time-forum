@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	db "forum/database"
 	"forum/helpers"
 	"forum/middlewares"
@@ -16,7 +15,6 @@ type MeResponse struct {
 
 func MeHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(middlewares.UserIDKey).(int)
-	fmt.Println("user_id", userID)
 
 	var nickname string
 	err := db.DB.QueryRow("SELECT nickname FROM users WHERE id = ?", userID).Scan(&nickname)
@@ -24,8 +22,8 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 		helpers.SendJSON(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
-
+	// say from browser the coming response is json
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(MeResponse{ID : userID, Nickname:  nickname} )
+	json.NewEncoder(w).Encode(MeResponse{ID: userID, Nickname: nickname})
 }

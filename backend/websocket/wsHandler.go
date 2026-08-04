@@ -8,33 +8,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-
-        //      Ayoub Browser
-        //           │
-        //           │
-        // socket.send(msg)
-        //           │
-        //           ▼
-        // ┌──────────────────┐
-        // │   Go Backend      │
-        // │──────────────────│
-        // │ ServeWs          │
-        // │ ReadPump         │
-        // │ HandleMessage    │
-        // │ Save SQLite      │
-        // │ Find Receiver    │
-        // │ WriteJSON        │
-        // └──────────────────┘
-        //           │
-        //           ▼
-        // socket.onmessage(...)
-        //           │
-        //           ▼
-        //      khadija el Browser
-
 var upgrader = websocket.Upgrader{
+	//Check if the request Origin header is acceptable and if the origin host is not equal to request Host header return false.
 	CheckOrigin: func(r *http.Request) bool {
-		return true
+		return r.Header.Get("Origin") == "http://localhost:8080"
 	},
 }
 

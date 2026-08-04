@@ -17,13 +17,15 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		helpers.SendJSON(w, http.StatusUnauthorized, "No session found")
 		return
 	}
- 
+
+	// DELET session from database
 	_, err = db.DB.Exec("DELETE FROM sessions WHERE token = ?", cookie.Value)
 	if err != nil {
 		helpers.SendJSON(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
- 
+	
+	// DELET session from browser
 	http.SetCookie(w, &http.Cookie{
 		Name:   "Form_Token",
 		Value:  "",

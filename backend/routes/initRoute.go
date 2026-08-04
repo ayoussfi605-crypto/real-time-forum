@@ -13,6 +13,7 @@ import (
 func InitRoutes(hub *ws.Hub) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServer(http.Dir("../frontend")))
+	//return func or Handler rutuen the user_id and nickname inside the contex key
 	mux.HandleFunc("/me", middlewares.AuthMiddleware(handlers.MeHandler))
 	mux.HandleFunc("/ws", middlewares.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		ws.ServeWs(hub, w, r)

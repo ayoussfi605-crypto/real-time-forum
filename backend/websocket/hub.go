@@ -51,7 +51,7 @@ type Client struct {
 func (c *Client) SafeWriteJSON(v interface{}) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-
+	// deadline if the write > 10 sc stop exp if the user close chat
 	c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 	return c.conn.WriteJSON(v)
 }
@@ -71,18 +71,20 @@ func NewHub() *Hub {
 func (h *Hub) AddClient(userID int, client *Client) {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
-
+	
+	// check if user_id He has map if not make it
 	if h.clients[userID] == nil {
 		h.clients[userID] = make(map[*Client]bool)
 	}
 	h.clients[userID][client] = true
 }
 
-func (h *Hub) RemoveClient(userID int, client *Client) {
+func (h *Hub) RemoveClient(userID int,client *Client) {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
-
+	// Remove connection
 	delete(h.clients[userID], client)
+	// remove map if the not have any tab or conn 
 	if len(h.clients[userID]) == 0 {
 		delete(h.clients, userID) 
 	}
@@ -99,9 +101,11 @@ func (h *Hub) HandleMessage(msg IncomingMessage) {
 	}
 
 	h.mutex.RLock()
+	// store ReceiverID in receiverClients if user is oneline (user existing in map h.clients)
 	receiverClients := h.clients[msg.Data.ReceiverID]
 	h.mutex.RUnlock()
 
+	// Brodcast message if user oneline
 	for c := range receiverClients {	
 		if err := c.SafeWriteJSON(msg); err != nil { 
 			log.Println("write error:", err)

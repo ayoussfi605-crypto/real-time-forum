@@ -45,13 +45,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			helpers.SendJSON(w, http.StatusInternalServerError, "Internal Server Error")
 			return
 		}
-		// var user User
+		
 		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password))
 		if err != nil {
 			helpers.SendJSON(w, http.StatusBadRequest, "Invalid credentials")
 			return
 		}
-		//delete olds sessions
+		//delete olds sessions from database
 		_, err = db.DB.Exec("DELETE FROM sessions WHERE user_id = ?", user.ID)
 		if err != nil {
 			helpers.SendJSON(w, http.StatusInternalServerError, "Could not remove old session")

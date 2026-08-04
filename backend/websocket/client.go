@@ -16,10 +16,12 @@ type IncomingMessage struct {
 	Data      IncomingData `json:"data"`
 }
 
+// this function is method the ReadPump(hub) after can use -> client.ReadPump(hub)
 func (c *Client) ReadPump(hub *Hub) {
 	defer hub.RemoveClient(c.userID, c)
 	defer c.conn.Close()
 
+	// max size msg id 4096 bytes
 	c.conn.SetReadLimit(maxMsgSize)
 
 	for {
