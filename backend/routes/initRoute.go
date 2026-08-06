@@ -30,5 +30,10 @@ func InitRoutes(hub *ws.Hub) *http.ServeMux {
 	// Categories (needed by the "new post" form)
 	mux.HandleFunc("GET /api/categories", handlers.GetCategoriesHandler)
 
+	// Chat
+	mux.HandleFunc("GET /api/users", middlewares.AuthMiddleware(handlers.GetUsersHandler))
+	mux.HandleFunc("GET /api/messages/{id}", middlewares.AuthMiddleware(handlers.GetMessagesHandler))
+	mux.HandleFunc("POST /api/messages/{id}/read", middlewares.AuthMiddleware(handlers.MarkMessagesReadHandler))
+
 	return mux
 }

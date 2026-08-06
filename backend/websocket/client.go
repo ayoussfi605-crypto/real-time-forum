@@ -3,12 +3,18 @@ package ws
 import (
 	"encoding/json"
 	"log"
+	"time"
 )
 
-type IncomingMessage struct {
-	SenderID   int    `json:"sender_id"`
-	ReceiverID int    `json:"receiver_id"`
-	Content    string `json:"content"`
+type WSMessage struct {
+	Type        string `json:"type"`
+	SenderID    int    `json:"sender_id,omitempty"`
+	ReceiverID  int    `json:"receiver_id,omitempty"`
+	Content     string `json:"content,omitempty"`
+	UserID      int    `json:"user_id,omitempty"` // For status
+	Online      bool   `json:"online,omitempty"`  // For status
+	CreatedAt   string `json:"created_at,omitempty"`
+	OnlineUsers []int  `json:"online_users,omitempty"` // For initial status
 }
 
 func (c *Client) ReadPump(hub *Hub) {
@@ -16,11 +22,10 @@ func (c *Client) ReadPump(hub *Hub) {
 	defer c.conn.Close()
 
 	for {
-		var msg IncomingMessage
+		var msg WSMessage
 
 		_, p, err := c.conn.ReadMessage()
 		if err != nil {
-			log.Println("read error:", err)
 			break
 		}
 
@@ -29,10 +34,11 @@ func (c *Client) ReadPump(hub *Hub) {
 			log.Println("invalid message:", err)
 			continue
 		}
-		// Never trust the client for the sender ID
-		msg.SenderID = c.userID
-		log.Printf("Message received: %+v\n", msg)
-
-		hub.HandleMessage(msg)
+		
+		if msg.Type == "chat_message" {
+			msg.SenderID = c.userID
+			msg.CreatedAt = time.Now().Format(time.RFC3339)
+			hub.HandleMessage(msg)
+		}
 	}
 }

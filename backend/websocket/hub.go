@@ -54,27 +54,50 @@ func NewHub() *Hub {
 	}
 }
 
-func (h *Hub) AddClient(userID int, client *Client) {
+func (h *Hub) BroadcastStatus(userID int, online bool) {
+	h.mutex.RLock()
+	defer h.mutex.RUnlock()
 
+	msg := WSMessage{
+		Type:   "user_status",
+		UserID: userID,
+		Online: online,
+	}
+
+	for id, client := range h.clients {
+		if id != userID {
+			err := client.conn.WriteJSON(msg)
+			if err != nil {
+				log.Println("broadcast error:", err)
+			}
+		}
+	}
+}
+
+func (h *Hub) AddClient(userID int, client *Client) {
 	h.mutex.Lock()
-	defer h.mutex.Unlock()
 	h.clients[userID] = client
+	h.mutex.Unlock()
+
+	h.BroadcastStatus(userID, true)
 }
 
 func (h *Hub) RemoveClient(userID int) {
-
 	h.mutex.Lock()
-	defer h.mutex.Unlock()
 	delete(h.clients, userID)
+	h.mutex.Unlock()
+
+	h.BroadcastStatus(userID, false)
 }
 
-func (h *Hub) HandleMessage(msg IncomingMessage) {
+func (h *Hub) HandleMessage(msg WSMessage) {
 	_, err := db.DB.Exec(
 		"INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)",
 		msg.SenderID, msg.ReceiverID, msg.Content,
 	)
 	if err != nil {
-		log.Println(err)
+		log.Println("db insert error:", err)
+		return
 	}
 
 	h.mutex.RLock()

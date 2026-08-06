@@ -14,7 +14,25 @@
 
     <main id="app"></main>
 
-  
+    <!-- Chat Sidebar and Window -->
+    <aside id="chat-sidebar" class="hidden">
+      <div class="chat-sidebar-header">
+        <h3>Online Users</h3>
+      </div>
+      <ul id="user-list"></ul>
+    </aside>
+
+    <div id="chat-window" class="hidden">
+      <div class="chat-header">
+        <h3 id="chat-user-name">User</h3>
+        <button id="close-chat-btn">×</button>
+      </div>
+      <div id="chat-messages"></div>
+      <form id="chat-form">
+        <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off" required>
+        <button type="submit">Send</button>
+      </form>
+    </div>
   <script type="module" src="/js/initApp.js"></script>
 
   </body>
