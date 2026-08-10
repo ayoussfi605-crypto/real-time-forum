@@ -15,7 +15,6 @@ type ReactionRequest struct {
 }
 
 func HandleReaction(w http.ResponseWriter, r *http.Request) {
-	// 1. Read JSON body
 	var req ReactionRequest
 
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -28,7 +27,6 @@ func HandleReaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Validate reaction
 	if req.Reaction != "like" && req.Reaction != "dislike" {
 		helpers.SendJSON(
 			w,
@@ -38,10 +36,8 @@ func HandleReaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Get authenticated user ID
 	userID := r.Context().Value(middlewares.UserIDKey).(int)
 
-	// 4. Get post ID from URL
 	postID, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		helpers.SendJSON(
@@ -52,5 +48,72 @@ func HandleReaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db.GetReaction(postID, userID)
+	reaction, err := db.GetReaction(postID, userID)
+	if err != nil {
+		helpers.SendJSON(
+			w,
+			http.StatusInternalServerError,
+			"Failed to get reaction",
+		)
+		return
+	}
+	// user doesn't have reaction
+	userReaction := req.Reaction
+
+	if reaction == nil {
+		err := db.CreateReaction(postID, userID, req.Reaction)
+		if err != nil {
+			helpers.SendJSON(
+				w,
+				http.StatusInternalServerError,
+				"Failed to create reaction",
+			)
+			return
+		}
+	} else {
+		if reaction.Reaction == req.Reaction {
+			err := db.DeleteReaction(postID, userID)
+			if err != nil {
+				helpers.SendJSON(
+					w,
+					http.StatusInternalServerError,
+					"Failed to delete reaction",
+				)
+				return
+			}
+
+			userReaction = ""
+		} else {
+			err := db.UpdateReaction(postID, userID, req.Reaction)
+			if err != nil {
+				helpers.SendJSON(
+					w,
+					http.StatusInternalServerError,
+					"Failed to update reaction",
+				)
+				return
+			}
+		}
+	}
+
+	stats, err := db.CountReactions(postID)
+	if err != nil {
+		helpers.SendJSON(
+			w,
+			http.StatusInternalServerError,
+			"Failed to count reactions",
+		)
+		return
+	}
+
+	helpers.SendJSON(
+		w,
+		http.StatusOK,
+		"Reaction updated",
+		map[string]interface{}{
+			"likes":        stats.Likes,
+			"dislikes":     stats.Dislikes,
+			"userReaction": userReaction,
+		},
+	)
 }
