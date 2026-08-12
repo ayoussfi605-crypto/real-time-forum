@@ -46,6 +46,31 @@ export async function renderPost(postId) {
           </div>
         </div>
 
+        <!-- Reactions -->
+      <div class="post-reactions">
+
+      <button
+      id="like-btn"
+      class="reaction-btn ${post.reactions.user_reaction === "like" ? "active" : ""}"
+    >
+    👍
+    <span id="likes-count">
+      ${post.reactions.likes}
+    </span>
+    </button>
+
+    <button
+    id="dislike-btn"
+    class="reaction-btn ${post.reactions.user_reaction === "dislike" ? "active" : ""}"
+    >
+    👎
+    <span id="dislikes-count">
+      ${post.reactions.dislikes}
+    </span>
+    </button>
+
+    </div>
+
         <!-- Comments section -->
         <div class="comments-section">
           <h3 class="comments-title">Comments <span class="comment-count">${post.comments.length}</span></h3>
@@ -66,8 +91,8 @@ export async function renderPost(postId) {
           <!-- List of existing comments -->
           <div id="comments-list" class="comments-list">
             ${post.comments.length === 0
-              ? `<div class="empty-state" style="padding: 30px;"><p>No comments yet. Be the first to reply!</p></div>`
-              : post.comments.map(c => `
+        ? `<div class="empty-state" style="padding: 30px;"><p>No comments yet. Be the first to reply!</p></div>`
+        : post.comments.map(c => `
                   <div class="comment-card">
                     <div class="card-header" style="margin-bottom: 8px;">
                       <div class="author-avatar" style="width: 32px; height: 32px; font-size: 14px;">${escapeHtml(c.author.charAt(0).toUpperCase())}</div>
@@ -79,7 +104,7 @@ export async function renderPost(postId) {
                     <p class="comment-content">${escapeHtml(c.content)}</p>
                   </div>
                 `).join("")
-            }
+      }
           </div>
 
         </div>
@@ -92,6 +117,13 @@ export async function renderPost(postId) {
       navigate("feed");
     });
 
+    document.getElementById("like-btn").addEventListener("click", () => {
+	  handleReaction(postId, "like");
+  });
+
+  document.getElementById("dislike-btn").addEventListener("click", () => {
+	handleReaction(postId, "dislike");
+  });
     // Comment form submission
     document.getElementById("comment-form").addEventListener("submit", (e) => {
       handleAddComment(e, postId);
@@ -101,6 +133,62 @@ export async function renderPost(postId) {
     console.error(err);
     app.innerHTML = `<p class="error-msg">Something went wrong.</p>`;
   }
+}
+
+async function handleReaction(postId, reaction) {
+	try {
+		const response = await fetch(
+			`/api/posts/${postId}/reaction`,
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				credentials: "include",
+				body: JSON.stringify({
+					reaction: reaction
+				})
+			}
+		);
+
+		const result = await response.json();
+
+		console.log(result);
+
+		if (!response.ok) {
+			console.error(result.message);
+			return;
+		}
+
+		const reactionData = result.data[0];
+
+		// Update numbers
+		document.getElementById("likes-count").textContent =
+			reactionData.likes;
+
+		document.getElementById("dislikes-count").textContent =
+			reactionData.dislikes;
+
+		// Get buttons
+		const likeBtn = document.getElementById("like-btn");
+		const dislikeBtn = document.getElementById("dislike-btn");
+
+		// Remove active from both
+		likeBtn.classList.remove("active");
+		dislikeBtn.classList.remove("active");
+
+		// Add active to current reaction
+		if (reactionData.userReaction === "like") {
+			likeBtn.classList.add("active");
+		}
+
+		if (reactionData.userReaction === "dislike") {
+			dislikeBtn.classList.add("active");
+		}
+
+	} catch (err) {
+		console.error("Reaction error:", err);
+	}
 }
 
 // ─────────────────────────────────────────────

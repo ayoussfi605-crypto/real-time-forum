@@ -22,8 +22,12 @@ func InitRoutes(hub *ws.Hub) *http.ServeMux {
 	// Posts
 	mux.HandleFunc("GET /api/posts", handlers.GetPostsHandler)
 	mux.HandleFunc("POST /api/posts", middlewares.AuthMiddleware(handlers.CreatePostHandler))
-	mux.HandleFunc("GET /api/posts/{id}", handlers.GetPostByIDHandler)
-
+	
+	mux.HandleFunc("GET /api/posts/{id}", middlewares.AuthMiddleware(handlers.GetPostByIDHandler),)
+	
+	// Like / Dislike
+	mux.HandleFunc("POST /api/posts/{id}/reaction",middlewares.AuthMiddleware(handlers.HandleReaction),)
+	
 	// Comments
 	mux.HandleFunc("POST /api/posts/{id}/comments", middlewares.AuthMiddleware(handlers.CreateCommentHandler))
 

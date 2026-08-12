@@ -7,9 +7,9 @@ import (
 
 	db "forum/database"
 	"forum/helpers"
+	"forum/middlewares"
 )
 
-// Shape of a single comment
 type Comment struct {
 	ID        int    `json:"id"`
 	Author    string `json:"author"`
@@ -17,83 +17,212 @@ type Comment struct {
 	CreatedAt string `json:"created_at"`
 }
 
-// Shape of a post with all its details (categories + comments included)
 type PostDetail struct {
-	ID         int       `json:"id"`
-	Title      string    `json:"title"`
-	Content    string    `json:"content"`
-	Author     string    `json:"author"`
-	CreatedAt  string    `json:"created_at"`
-	Categories []string  `json:"categories"`
-	Comments   []Comment `json:"comments"`
+	ID         int          `json:"id"`
+	Title      string       `json:"title"`
+	Content    string       `json:"content"`
+	Author     string       `json:"author"`
+	CreatedAt  string       `json:"created_at"`
+	Categories []string     `json:"categories"`
+	Comments   []Comment    `json:"comments"`
+	Reactions  ReactionInfo `json:"reactions"`
 }
 
-// GET /api/posts/{id} — returns one post with its categories and comments
+type ReactionInfo struct {
+	Likes        int    `json:"likes"`
+	Dislikes     int    `json:"dislikes"`
+	UserReaction string `json:"user_reaction"`
+}
+
 func GetPostByIDHandler(w http.ResponseWriter, r *http.Request) {
 
-	// r.PathValue("id") reads the {id} part from the URL
-	// For example: /api/posts/5 → idStr = "5"
+	// 1. Get post ID
+
 	idStr := r.PathValue("id")
-	postID, err := strconv.Atoi(idStr) // convert "5" (string) to 5 (number)
+
+	postID, err := strconv.Atoi(idStr)
 	if err != nil {
-		helpers.SendJSON(w, http.StatusBadRequest, "Invalid post ID")
+		helpers.SendJSON(
+			w,
+			http.StatusBadRequest,
+			"Invalid post ID",
+		)
 		return
 	}
+
+	// 2. Get authenticated user ID
+
+	userID := r.Context().Value(middlewares.UserIDKey).(int)
 
 	var post PostDetail
 
-	// Get the post and the author's nickname
+	// 3. Get post
+
 	err = db.DB.QueryRow(`
-		SELECT p.id, p.title, p.content, p.created_at, u.nickname
+		SELECT
+			p.id,
+			p.title,
+			p.content,
+			p.created_at,
+			u.nickname
 		FROM posts p
 		JOIN users u ON u.id = p.user_id
 		WHERE p.id = ?
-	`, postID).Scan(&post.ID, &post.Title, &post.Content, &post.CreatedAt, &post.Author)
+	`, postID).Scan(
+		&post.ID,
+		&post.Title,
+		&post.Content,
+		&post.CreatedAt,
+		&post.Author,
+	)
 
 	if err != nil {
-		helpers.SendJSON(w, http.StatusNotFound, "Post not found")
+		helpers.SendJSON(
+			w,
+			http.StatusNotFound,
+			"Post not found",
+		)
 		return
 	}
 
-	// Get the categories for this post
+	// 4. Get categories
+
 	catRows, err := db.DB.Query(`
-		SELECT c.name FROM categories c
-		JOIN post_categories pc ON pc.category_id = c.id
+		SELECT c.name
+		FROM categories c
+		JOIN post_categories pc
+			ON pc.category_id = c.id
 		WHERE pc.post_id = ?
 	`, postID)
+
 	if err == nil {
+
 		for catRows.Next() {
+
 			var name string
-			catRows.Scan(&name)
-			post.Categories = append(post.Categories, name)
+
+			if err := catRows.Scan(&name); err != nil {
+				catRows.Close()
+
+				helpers.SendJSON(
+					w,
+					http.StatusInternalServerError,
+					"Failed to get categories",
+				)
+				return
+			}
+
+			post.Categories = append(
+				post.Categories,
+				name,
+			)
 		}
-		catRows.Close() // explicitly close here before the next query
+
+		catRows.Close()
 	}
+
 	if post.Categories == nil {
 		post.Categories = []string{}
 	}
 
-	// Get all comments for this post (oldest first)
+	// 5. Get comments
+
 	commentRows, err := db.DB.Query(`
-		SELECT c.id, u.nickname, c.content, c.created_at
+		SELECT
+			c.id,
+			u.nickname,
+			c.content,
+			c.created_at
 		FROM comments c
 		JOIN users u ON u.id = c.user_id
 		WHERE c.post_id = ?
 		ORDER BY c.created_at ASC
 	`, postID)
+
 	if err == nil {
-		defer commentRows.Close()
+
 		for commentRows.Next() {
+
 			var c Comment
-			commentRows.Scan(&c.ID, &c.Author, &c.Content, &c.CreatedAt)
-			post.Comments = append(post.Comments, c)
+
+			if err := commentRows.Scan(
+				&c.ID,
+				&c.Author,
+				&c.Content,
+				&c.CreatedAt,
+			); err != nil {
+
+				commentRows.Close()
+
+				helpers.SendJSON(
+					w,
+					http.StatusInternalServerError,
+					"Failed to get comments",
+				)
+				return
+			}
+
+			post.Comments = append(
+				post.Comments,
+				c,
+			)
 		}
+
+		commentRows.Close()
 	}
+
 	if post.Comments == nil {
 		post.Comments = []Comment{}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	// 6. Get total likes/dislikes
+
+	stats, err := db.CountReactions(postID)
+
+	if err != nil {
+		helpers.SendJSON(
+			w,
+			http.StatusInternalServerError,
+			"Failed to get reaction stats",
+		)
+		return
+	}
+
+	// 7. Get current user's reaction
+
+	userReaction, err := db.GetReaction(
+		postID,
+		userID,
+	)
+
+	if err != nil {
+		helpers.SendJSON(
+			w,
+			http.StatusInternalServerError,
+			"Failed to get user reaction",
+		)
+		return
+	}
+
+	// 8. Put reaction information into PostDetail
+
+	post.Reactions.Likes = stats.Likes
+	post.Reactions.Dislikes = stats.Dislikes
+
+	if userReaction != nil {
+		post.Reactions.UserReaction = userReaction.Reaction
+	} else {
+		post.Reactions.UserReaction = ""
+	}
+
+	// 9. Send JSON
+
+	w.Header().Set(
+		"Content-Type",
+		"application/json",
+	)
+
 	w.WriteHeader(http.StatusOK)
+
 	json.NewEncoder(w).Encode(post)
 }

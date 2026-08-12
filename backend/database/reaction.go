@@ -10,39 +10,39 @@ type Reaction struct {
 	CreatedAt string
 }
 
-
 type ReactionStats struct {
 	Likes    int
 	Dislikes int
 }
 
-
 func GetReaction(postID, userID int) (*Reaction, error) {
-	var reaction Reaction
+    var reaction Reaction
 
-	err := DB.QueryRow(`
-	SELECT id, post_id, user_id, reaction, created_at
-	FROM post_reactions
-	WHERE post_id = ? AND user_id = ?
-	`, postID, userID).Scan(
-		&reaction.ID,
-		&reaction.PostID,
-		&reaction.UserID,
-		&reaction.Reaction,
-		&reaction.CreatedAt,
-	)
+    err := DB.QueryRow(`
+        SELECT id, post_id, user_id, reaction, created_at
+        FROM post_reactions
+        WHERE post_id = ? AND user_id = ?
+    `,
+        postID,
+        userID,
+    ).Scan(
+        &reaction.ID,
+        &reaction.PostID,
+        &reaction.UserID,
+        &reaction.Reaction,
+        &reaction.CreatedAt,
+    )
 
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return nil, nil
+        }
 
-		return nil, err
-	}
+        return nil, err
+    }
 
-	return &reaction, nil
+    return &reaction, nil
 }
-
 
 func CreateReaction(postID, userID int, reactionType string) error {
 	_, err := DB.Exec(`
