@@ -1,44 +1,28 @@
 package ws
 
 import (
-	"encoding/json"
-	"log"
+	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
-type WSMessage struct {
-	Type        string `json:"type"`
-	SenderID    int    `json:"sender_id,omitempty"`
-	ReceiverID  int    `json:"receiver_id,omitempty"`
-	Content     string `json:"content,omitempty"`
-	UserID      int    `json:"user_id,omitempty"` // For status
-	Online      bool   `json:"online,omitempty"`  // For status
-	CreatedAt   string `json:"created_at,omitempty"`
-	OnlineUsers []int  `json:"online_users,omitempty"` // For initial status
+const (
+	writeWait  = 10 * time.Second
+	maxMsgSize = 4096
+)
+
+type Client struct {
+	userID int
+	conn   *websocket.Conn
+	mutex  sync.Mutex
 }
 
-func (c *Client) ReadPump(hub *Hub) {
-	defer hub.RemoveClient(c.userID)
-	defer c.conn.Close()
+func (c *Client) SafeWriteJSON(v interface{}) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 
-	for {
-		var msg WSMessage
+	c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 
-		_, p, err := c.conn.ReadMessage()
-		if err != nil {
-			break
-		}
-
-		err = json.Unmarshal(p, &msg)
-		if err != nil {
-			log.Println("invalid message:", err)
-			continue
-		}
-		
-		if msg.Type == "chat_message" {
-			msg.SenderID = c.userID
-			msg.CreatedAt = time.Now().Format(time.RFC3339)
-			hub.HandleMessage(msg)
-		}
-	}
+	return c.conn.WriteJSON(v)
 }

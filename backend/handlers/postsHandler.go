@@ -116,6 +116,17 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Length validation
+	if len(input.Title) > 100 {
+    helpers.SendJSON(w, http.StatusBadRequest, "Title is too long")
+    return
+	}
+
+	if len(input.Content) > 5000 {
+    helpers.SendJSON(w, http.StatusBadRequest, "Content is too long")
+    return
+	}
+
 	// Insert the new post into the database
 	result, err := db.DB.Exec(
 		"INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)",
