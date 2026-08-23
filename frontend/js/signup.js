@@ -92,7 +92,6 @@ async function handleSignUp(e){
         
         return;
     }
-    alert("Tregister succec! you can login.");
     navigate("signin");
   } catch(err){
     errorBox.textContent = "internal server error"
