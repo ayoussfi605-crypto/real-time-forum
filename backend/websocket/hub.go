@@ -80,6 +80,25 @@ func (h *Hub) BroadcastStatus(userID int, online bool) {
 	}
 }
 
+func (h *Hub) clientsForUsers(userIDs ...int) []*Client {
+	h.mutex.RLock()
+	defer h.mutex.RUnlock()
+
+	seen := make(map[*Client]bool)
+	clients := make([]*Client, 0)
+
+	for _, userID := range userIDs {
+		for client := range h.clients[userID] {
+			if !seen[client] {
+				seen[client] = true
+				clients = append(clients, client)
+			}
+		}
+	}
+
+	return clients
+}
+
 func (h *Hub) HandleMessage(msg WSMessage) {
 	_, err := db.DB.Exec(
 		"INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)",
@@ -93,19 +112,7 @@ func (h *Hub) HandleMessage(msg WSMessage) {
 		return
 	}
 
-	h.mutex.RLock()
-
-	connections := h.clients[msg.ReceiverID]
-
-	var clients []*Client
-
-	for client := range connections {
-		clients = append(clients, client)
-	}
-
-	h.mutex.RUnlock()
-
-	for _, client := range clients {
+	for _, client := range h.clientsForUsers(msg.SenderID, msg.ReceiverID) {
 		if err := client.SafeWriteJSON(msg); err != nil {
 			log.Println("write error:", err)
 		}

@@ -88,13 +88,6 @@ export async function initChat() {
             };
             ws.send(JSON.stringify(chatMsg));
 
-            // Optimistically add to UI
-            appendMessage({
-                sender_id: currentUser.id,
-                content: content,
-                created_at: new Date().toISOString()
-            }, true);
-
             input.value = "";
             scrollToBottom();
 
@@ -131,21 +124,31 @@ function handleWSMessage(msg) {
             renderUserList();
         }
     } else if (msg.type === "chat_message") {
-        // If message is from current chat, append it and mark as read
-        if (currentChatUserId === msg.sender_id) {
+        const currentUser = getCurrentUser();
+        const activePeerId = currentChatUserId;
+        const isMessageForCurrentChat = activePeerId && (
+            msg.sender_id === activePeerId ||
+            msg.receiver_id === activePeerId
+        );
+
+        if (isMessageForCurrentChat) {
             appendMessage(msg, true);
             scrollToBottom();
-            fetch(`/api/messages/${msg.sender_id}/read`, { method: "POST" }).catch(console.error);
+
+            if (msg.receiver_id === currentUser.id) {
+                fetch(`/api/messages/${msg.sender_id}/read`, { method: "POST" }).catch(console.error);
+            }
         } else {
-            // Otherwise, increment unread count
-            const user = chatUsers.find(u => u.id === msg.sender_id);
+            const unreadUserId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
+            const user = chatUsers.find(u => u.id === unreadUserId);
             if (user) {
                 user.unread_count++;
                 renderUserList();
             }
         }
-        // Move sender to top of user list
-        moveUserToTop(msg.sender_id);
+
+        const userToMove = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
+        moveUserToTop(userToMove);
     }
 }
 

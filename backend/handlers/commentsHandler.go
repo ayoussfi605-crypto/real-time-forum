@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -53,6 +54,7 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 		"INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)",
 		postID, userID, input.Content,
 	)
+	fmt.Println("com id")
 	if err != nil {
 		helpers.SendJSON(w, http.StatusInternalServerError, "Could not add comment")
 		return

@@ -92,64 +92,117 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the ID of the logged-in user (the auth middleware puts it in the request context)
-	userID := r.Context().Value(middlewares.UserIDKey).(int)
+	userID, ok := r.Context().Value(middlewares.UserIDKey).(int)
+	if !ok {
+		helpers.SendJSON(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
-	// Read and parse the JSON body sent from the frontend
 	var input CreatePostRequest
-	err := json.NewDecoder(r.Body).Decode(&input)
-	if err != nil {
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		helpers.SendJSON(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer r.Body.Close()
 
-	// Basic validation — title and content must not be empty
+	// Validation
+	input.Title = strings.TrimSpace(input.Title)
+	input.Content = strings.TrimSpace(input.Content)
+
 	if input.Title == "" || input.Content == "" {
 		helpers.SendJSON(w, http.StatusBadRequest, "Title and content are required")
 		return
 	}
 
-	// Must pick at least one category
 	if len(input.Categories) == 0 {
 		helpers.SendJSON(w, http.StatusBadRequest, "Please select at least one category")
 		return
 	}
 
-	// Length validation
 	if len(input.Title) > 100 {
-    helpers.SendJSON(w, http.StatusBadRequest, "Title is too long")
-    return
+		helpers.SendJSON(w, http.StatusBadRequest, "Title is too long")
+		return
 	}
 
 	if len(input.Content) > 5000 {
-    helpers.SendJSON(w, http.StatusBadRequest, "Content is too long")
-    return
+		helpers.SendJSON(w, http.StatusBadRequest, "Content is too long")
+		return
 	}
 
-	// Insert the new post into the database
-	result, err := db.DB.Exec(
+	// Check that all categories exist BEFORE creating the post
+	for _, catID := range input.Categories {
+		var exists int
+
+		err := db.DB.QueryRow(
+			"SELECT 1 FROM categories WHERE id = ?",
+			catID,
+		).Scan(&exists)
+
+		if err != nil {
+			helpers.SendJSON(
+				w,
+				http.StatusBadRequest,
+				"Category does not exist",
+			)
+			return
+		}
+	}
+
+	// Start transaction
+	tx, err := db.DB.Begin()
+	if err != nil {
+		helpers.SendJSON(w, http.StatusInternalServerError, "Could not start transaction")
+		return
+	}
+
+	// Create post
+	result, err := tx.Exec(
 		"INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)",
-		userID, input.Title, input.Content,
+		userID,
+		input.Title,
+		input.Content,
 	)
 	if err != nil {
+		tx.Rollback()
 		helpers.SendJSON(w, http.StatusInternalServerError, "Could not create post")
 		return
 	}
 
-	// Get the ID that was automatically assigned to the new post
 	postID, err := result.LastInsertId()
 	if err != nil {
+		tx.Rollback()
 		helpers.SendJSON(w, http.StatusInternalServerError, "Could not get post ID")
 		return
 	}
 
-	// Link each selected category to the post (using the junction table)
+	// Link categories
 	for _, catID := range input.Categories {
-		db.DB.Exec(
+		_, err := tx.Exec(
 			"INSERT INTO post_categories (post_id, category_id) VALUES (?, ?)",
-			postID, catID,
+			postID,
+			catID,
 		)
+
+		if err != nil {
+			tx.Rollback()
+			helpers.SendJSON(
+				w,
+				http.StatusInternalServerError,
+				"Could not assign category",
+			)
+			return
+		}
+	}
+
+	// Everything succeeded
+	if err := tx.Commit(); err != nil {
+		helpers.SendJSON(
+			w,
+			http.StatusInternalServerError,
+			"Could not save post",
+		)
+		return
 	}
 
 	helpers.SendJSON(w, http.StatusCreated, "Post created successfully")
