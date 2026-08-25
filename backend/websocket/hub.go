@@ -100,16 +100,18 @@ func (h *Hub) clientsForUsers(userIDs ...int) []*Client {
 }
 
 func (h *Hub) HandleMessage(msg WSMessage) {
-	_, err := db.DB.Exec(
-		"INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)",
-		msg.SenderID,
-		msg.ReceiverID,
-		msg.Content,
-	)
+	if msg.Type == "chat_message" {
+		_, err := db.DB.Exec(
+			"INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)",
+			msg.SenderID,
+			msg.ReceiverID,
+			msg.Content,
+		)
 
-	if err != nil {
-		log.Println("db insert error:", err)
-		return
+		if err != nil {
+			log.Println("db insert error:", err)
+			return
+		}
 	}
 
 	for _, client := range h.clientsForUsers(msg.SenderID, msg.ReceiverID) {

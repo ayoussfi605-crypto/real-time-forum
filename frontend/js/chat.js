@@ -6,6 +6,8 @@ let currentChatUserId = null;
 let messagesOffset = 0;
 let isLoadingMessages = false;
 let hasMoreMessages = true;
+let typingTimeout = null;
+let isTyping = false;
 
 // Throttle function for scroll
 function throttle(func, limit) {
@@ -88,6 +90,12 @@ export async function initChat() {
             };
             ws.send(JSON.stringify(chatMsg));
 
+            if (isTyping) {
+                isTyping = false;
+                clearTimeout(typingTimeout);
+                ws.send(JSON.stringify({ type: "stop_typing", receiver_id: currentChatUserId }));
+            }
+
             input.value = "";
             scrollToBottom();
 
@@ -96,8 +104,25 @@ export async function initChat() {
         }
     });
 
+    const chatInput = document.getElementById("chat-input");
+    chatInput.addEventListener("input", () => {
+        if (!currentChatUserId || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+        if (!isTyping) {
+            isTyping = true;
+            ws.send(JSON.stringify({ type: "typing", receiver_id: currentChatUserId }));
+        }
+
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            isTyping = false;
+            ws.send(JSON.stringify({ type: "stop_typing", receiver_id: currentChatUserId }));
+        }, 1500);
+    });
+
     document.getElementById("close-chat-btn").addEventListener("click", () => {
         document.getElementById("chat-window").classList.add("hidden");
+        document.getElementById("typing-indicator").classList.add("hidden");
         currentChatUserId = null;
     });
 
@@ -149,6 +174,19 @@ function handleWSMessage(msg) {
 
         const userToMove = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
         moveUserToTop(userToMove);
+    } else if (msg.type === "typing") {
+        if (currentChatUserId === msg.sender_id) {
+            const user = chatUsers.find(u => u.id === msg.sender_id);
+            if (user) {
+                document.getElementById("typing-user").textContent = user.nickname;
+                document.getElementById("typing-indicator").classList.remove("hidden");
+                scrollToBottom();
+            }
+        }
+    } else if (msg.type === "stop_typing") {
+        if (currentChatUserId === msg.sender_id) {
+            document.getElementById("typing-indicator").classList.add("hidden");
+        }
     }
 }
 
@@ -192,6 +230,7 @@ async function openChat(userId, nickname) {
     }
     
     document.getElementById("chat-window").classList.remove("hidden");
+    document.getElementById("typing-indicator").classList.add("hidden");
     document.getElementById("chat-user-name").textContent = nickname;
     document.getElementById("chat-messages").innerHTML = "";
     document.getElementById("chat-input").focus();
@@ -279,6 +318,7 @@ export function closeChatAndWS() {
     }
     document.getElementById("chat-sidebar").classList.add("hidden");
     document.getElementById("chat-window").classList.add("hidden");
+    document.getElementById("typing-indicator").classList.add("hidden");
     document.body.classList.remove("has-sidebar");
     currentChatUserId = null;
     chatUsers = [];

@@ -91,13 +91,12 @@ func (c *Client) ReadPump(hub *Hub) {
 			continue
 		}
 
-		// Only accept chat messages
-		if msg.Type != "chat_message" {
+		if msg.Type != "chat_message" && msg.Type != "typing" && msg.Type != "stop_typing" {
 			continue
 		}
 
-		// Empty message
-		if msg.Content == "" {
+		// Empty message only matters for chat messages
+		if msg.Type == "chat_message" && msg.Content == "" {
 			continue
 		}
 
