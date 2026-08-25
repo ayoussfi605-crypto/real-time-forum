@@ -156,10 +156,6 @@ function renderUserList() {
     const list = document.getElementById("user-list");
     list.innerHTML = "";
     
-    // Sort logic: Keep original order (which is by last message from DB), 
-    // but we update it via moveUserToTop when new messages arrive.
-    // So we just render the array as is.
-    
     chatUsers.forEach(u => {
         const li = document.createElement("li");
         li.className = "user-item";

@@ -1,33 +1,33 @@
-/* ===== Modern Forum Design ===== */
+/* ===== Forum Design ===== */
 
 @import url("auth.css");
 @import url("forum.css");
 @import url("chat.css");
 
-/* CSS Variables for consistent theming */
+/* CSS Variables */
 :root {
   --primary: #4f46e5;
   --primary-light: #6366f1;
   --primary-dark: #4338ca;
-  --primary-50: rgba(79, 70, 229, 0.1);
+  --primary-50: rgba(79, 70, 229, 0.08);
   --secondary: #10b981;
   --danger: #ef4444;
   --danger-light: #f87171;
-  --text-primary: #1f2937;
-  --text-secondary: #6b7280;
-  --text-muted: #9ca3af;
-  --bg-primary: #f9fafb;
+  --text-primary: #1a1a1b;
+  --text-secondary: #787c7e;
+  --text-muted: #a8aaab;
+  --bg-primary: #dae0e6;
   --bg-card: #ffffff;
-  --border: #e5e7eb;
-  --border-light: #f3f4f6;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --radius: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --transition: all 0.2s ease;
+  --border: #ccc;
+  --border-light: #edeff1;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 2px 6px rgba(0,0,0,0.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
+  --radius: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --transition: all 0.15s ease;
 }
 
 /* Reset */
@@ -41,8 +41,13 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+  /* Lock the page height so only #app scrolls internally */
+  height: 100vh;
+  overflow: hidden;
 }
 
 .hidden {
@@ -57,34 +62,39 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-  color: white;
-  padding: 0 32px;
-  height: 64px;
-  box-shadow: var(--shadow-md);
+  background: #ffffff;
+  color: var(--text-primary);
+  padding: 0 24px;
+  height: 48px;
+  border-bottom: 1px solid var(--border);
 }
 
 #nav-username {
-  font-weight: 600;
-  font-size: 16px;
-  letter-spacing: -0.025em;
+  font-weight: 500;
+  font-size: 14px;
 }
 
 #navbar button {
-  background: var(--danger);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: var(--radius);
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  padding: 6px 16px;
+  border-radius: 9999px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   transition: var(--transition);
 }
 
 #navbar button:hover {
-  background: var(--danger-light);
-  transform: translateY(-1px);
+  background: var(--primary-50);
+}
+
+/* ===== Page Layout ===== */
+.page-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 }
 
 /* ===== Main App Container ===== */
@@ -92,22 +102,23 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px;
-  min-height: calc(100vh - 64px);
+  padding: 20px 16px;
+  flex: 1;
+  min-width: 0; /* allow shrinking next to the chat sidebar */
+  overflow-y: auto;
 }
 
-/* ===== Header (for forms) ===== */
+/* ===== Header ===== */
 .header {
   text-align: center;
-  margin-bottom: 32px;
-  padding: 24px;
+  margin-bottom: 24px;
+  padding: 20px;
 }
 
 .header h1 {
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: -0.025em;
 }
 
 /* ===== Generic Form Styles ===== */
@@ -115,58 +126,54 @@ form {
   background: var(--bg-card);
   width: 100%;
   max-width: 440px;
-  padding: 40px;
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
+  padding: 32px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border);
 }
 
 form label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  margin-top: 20px;
-  margin-bottom: 8px;
+  margin-top: 16px;
+  margin-bottom: 6px;
   color: var(--text-primary);
 }
 
 form input,
 form select {
-  padding: 14px 16px;
+  padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  font-size: 15px;
+  font-size: 14px;
   outline: none;
   transition: var(--transition);
-  background: var(--bg-primary);
+  background: var(--bg-card);
 }
 
 form input:focus,
 form select:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-50);
-  background: var(--bg-card);
+  box-shadow: 0 0 0 2px var(--primary-50);
 }
 
 form button[type="submit"] {
-  margin-top: 28px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  margin-top: 20px;
+  background: var(--primary);
   color: white;
   border: none;
-  padding: 14px;
-  border-radius: var(--radius);
-  font-size: 15px;
-  font-weight: 600;
+  padding: 10px;
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
   transition: var(--transition);
-  letter-spacing: -0.025em;
 }
 
 form button[type="submit"]:hover {
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  background: var(--primary-dark);
 }
 
 /* ===== Error messages ===== */
@@ -177,11 +184,18 @@ form button[type="submit"]:hover {
   color: var(--danger);
 }
 
+.error-msg {
+  margin-top: 12px;
+  font-size: 13px;
+  min-height: 16px;
+  color: var(--danger);
+}
+
 /* ===== Links below forms ===== */
 #app > p {
   text-align: center;
-  margin-top: 20px;
-  font-size: 14px;
+  margin-top: 16px;
+  font-size: 13px;
   color: var(--text-secondary);
 }
 
@@ -189,37 +203,41 @@ form button[type="submit"]:hover {
   color: var(--primary);
   text-decoration: none;
   font-weight: 600;
-  transition: var(--transition);
 }
 
 #app > p a:hover {
-  color: var(--primary-dark);
   text-decoration: underline;
 }
 
 /* ===== Empty State & Loading ===== */
 .empty-state {
   text-align: center;
-  padding: 80px 20px;
+  padding: 48px 20px;
   color: var(--text-muted);
 }
 
 .empty-state h3 {
   color: var(--text-primary);
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
-  margin-bottom: 8px;
-  letter-spacing: -0.025em;
+  margin-bottom: 4px;
 }
 
 .loading-spinner {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border: 3px solid var(--border-light);
   border-top: 3px solid var(--primary);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 40px auto;
+  animation: spin 0.7s linear infinite;
+  margin: 32px auto;
+}
+
+.loading-msg {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-muted);
+  font-size: 14px;
 }
 
 /* ===== Shared Keyframes ===== */
@@ -229,6 +247,6 @@ form button[type="submit"]:hover {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

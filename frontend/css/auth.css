@@ -1,106 +1,23 @@
-/* ===== Auth Split-Screen Layout ===== */
+/* ===== Auth Full-Page Layout ===== */
 .auth-container {
   display: flex;
   min-height: 100vh;
   width: 100%;
-  margin: -40px -20px;
 }
 
+/* Hide branding section */
 .auth-branding {
-  flex: 0 0 45%;
-  background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 50%, #6d28d9 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 60px;
-  color: white;
-  position: relative;
-  overflow: hidden;
+  display: none;
 }
 
-.auth-branding::before {
-  content: '';
-  position: absolute;
-  width: 400px;
-  height: 400px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  top: -120px;
-  right: -120px;
-}
-
-.auth-branding::after {
-  content: '';
-  position: absolute;
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.04);
-  bottom: -100px;
-  left: -80px;
-}
-
-.brand-content {
-  position: relative;
-  z-index: 1;
-  max-width: 420px;
-  animation: fadeIn 0.6s ease;
-}
-
-.brand-logo {
-  font-size: 44px;
-  font-weight: 800;
-  margin-bottom: 12px;
-  letter-spacing: -0.03em;
-}
-
-.brand-tagline {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 16px;
-  opacity: 0.95;
-}
-
-.brand-description {
-  font-size: 16px;
-  line-height: 1.7;
-  opacity: 0.8;
-  margin-bottom: 48px;
-}
-
-.brand-benefits {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.benefit-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  font-size: 17px;
-  font-weight: 500;
-}
-
-.benefit-icon {
-  width: 48px;
-  height: 48px;
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  backdrop-filter: blur(4px);
-}
-
-/* Auth Form Side */
+/* Auth Form Side - full page, centered */
 .auth-form-side {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 40px;
+  min-height: 100vh;
   background: var(--bg-primary);
 }
 
@@ -260,27 +177,20 @@
 /* Auth Submit Button */
 .auth-submit-btn {
   width: 100%;
-  margin-top: 28px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  margin-top: 24px;
+  background: var(--primary);
   color: white;
   border: none;
-  padding: 14px;
-  border-radius: var(--radius);
+  padding: 12px;
+  border-radius: 999px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: var(--transition);
-  letter-spacing: -0.025em;
 }
 
 .auth-submit-btn:hover {
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
-}
-
-.auth-submit-btn:active {
-  transform: translateY(0);
+  background: var(--primary-dark);
 }
 
 /* Auth Switch Link */
@@ -311,14 +221,6 @@
 
 /* Auth Responsive */
 @media (max-width: 768px) {
-  .auth-container {
-    margin: 0;
-  }
-
-  .auth-branding {
-    display: none;
-  }
-
   .auth-form-side {
     padding: 20px;
     min-height: 100vh;

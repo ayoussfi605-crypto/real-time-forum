@@ -125,7 +125,7 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(input.Content) > 5000 {
+	if len(input.Content) > 10000 {
 		helpers.SendJSON(w, http.StatusBadRequest, "Content is too long")
 		return
 	}
