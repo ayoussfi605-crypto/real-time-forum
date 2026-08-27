@@ -45,7 +45,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			helpers.SendJSON(w, http.StatusInternalServerError, "Internal Server Error")
 			return
 		}
-		// var user User
+		
 		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password))
 		if err != nil {
 			helpers.SendJSON(w, http.StatusBadRequest, "Invalid credentials")
@@ -73,5 +73,5 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
-	// helpers.SendJSON(w, http.StatusMethodNotAllowed, "Method Not Allowed")
+	helpers.SendJSON(w, http.StatusMethodNotAllowed, "Method Not Allowed")
 }
