@@ -20,7 +20,7 @@ type WSMessage struct {
 	CreatedAt   string `json:"created_at,omitempty"`
 	OnlineUsers []int  `json:"online_users,omitempty"`
 }
-
+// check if the origin is allowed to connect
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return r.Header.Get("Origin") == "http://localhost:8080"
