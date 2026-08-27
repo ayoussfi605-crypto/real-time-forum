@@ -11,7 +11,7 @@
    posts passing behind; z-index stays below the navbar (99). */
 .feed-header {
   position: sticky;
-  top: 0;
+  top: -20px;
   z-index: 10;
 
   background: rgb(228, 225, 230);
