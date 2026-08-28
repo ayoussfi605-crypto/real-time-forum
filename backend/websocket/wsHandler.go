@@ -74,14 +74,10 @@ func (c *Client) ReadPump(hub *Hub) {
 	defer c.conn.Close()
 
 	for {
-
 		_, payload, err := c.conn.ReadMessage()
-
 		if err != nil {
-			log.Println("read error:", err)
 			break
 		}
-
 		var msg WSMessage
 
 		err = json.Unmarshal(payload, &msg)

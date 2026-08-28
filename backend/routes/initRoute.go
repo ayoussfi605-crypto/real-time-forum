@@ -37,7 +37,7 @@ func InitRoutes(hub *ws.Hub) *http.ServeMux {
 	// Chat
 	mux.HandleFunc("GET /api/users", middlewares.AuthMiddleware(handlers.GetUsersHandler))
 	mux.HandleFunc("GET /api/messages/{id}", middlewares.AuthMiddleware(handlers.GetMessagesHandler))
-	mux.HandleFunc("POST /api/messages/{id}/read", middlewares.AuthMiddleware(handlers.MarkMessagesReadHandler))
+	mux.HandleFunc("POST /api/messages/{id}/read", middlewares.AuthMiddleware(handlers.MarkMessagesReadHandler(hub)))
 
 	return mux
 }

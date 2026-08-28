@@ -147,6 +147,10 @@ function handleWSMessage(msg) {
         if (user) {
             user.online = msg.online;
             renderUserList();
+
+            if (!msg.online && currentChatUserId === msg.user_id) {
+                document.getElementById("typing-indicator").classList.add("hidden");
+            }
         }
     } else if (msg.type === "chat_message") {
         const currentUser = getCurrentUser();
@@ -186,6 +190,15 @@ function handleWSMessage(msg) {
     } else if (msg.type === "stop_typing") {
         if (currentChatUserId === msg.sender_id) {
             document.getElementById("typing-indicator").classList.add("hidden");
+        }
+    } else if (msg.type === "messages_read") {
+        const currentUser = getCurrentUser();
+        if (msg.receiver_id === currentUser.id) {
+            const user = chatUsers.find(u => u.id === msg.sender_id);
+            if (user && user.unread_count > 0) {
+                user.unread_count = 0;
+                renderUserList();
+            }
         }
     }
 }
