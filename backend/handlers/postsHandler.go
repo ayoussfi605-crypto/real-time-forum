@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	db "forum/database"
@@ -27,10 +28,23 @@ type CreatePostRequest struct {
 	Categories []int  `json:"categories"` // list of category IDs (e.g. [1, 3])
 }
 
-// GET /api/posts — returns all posts (newest first)
+// GET /api/posts?page=1 — returns posts with pagination (newest first)
 func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Ask the database for all posts, and also grab the author's nickname and categories using GROUP_CONCAT
+	// Parse page number from query string (default = 1)
+	page := 1
+	if p := r.URL.Query().Get("page"); p != "" {
+		page, _ = strconv.Atoi(p)
+		if page < 1 {
+			page = 1
+		}
+	}
+
+	limit := 10
+	offset := (page - 1) * limit
+
+	// Ask the database for posts with LIMIT and OFFSET
+	// We fetch limit+1 to know if there are more posts after this page
 	rows, err := db.DB.Query(`
 		SELECT 
 			p.id, 
@@ -45,7 +59,8 @@ func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 		LEFT JOIN categories c ON c.id = pc.category_id
 		GROUP BY p.id
 		ORDER BY p.created_at DESC
-	`)
+		LIMIT ? OFFSET ?
+	`, limit+1, offset)
 	if err != nil {
 		helpers.SendJSON(w, http.StatusInternalServerError, "Could not get posts")
 		return
@@ -74,6 +89,17 @@ func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 		posts = append(posts, p)
 	}
+	
+	if err := rows.Err(); err != nil {
+		helpers.SendJSON(w, http.StatusInternalServerError, "Error reading posts")
+		return
+	}
+
+	// Check if there are more posts beyond this page
+	hasMore := len(posts) > limit
+	if hasMore {
+		posts = posts[:limit] // trim the extra one
+	}
 
 	// Make sure posts is an empty list [] instead of null in JSON
 	if posts == nil {
@@ -82,7 +108,10 @@ func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(posts)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"posts":   posts,
+		"hasMore": hasMore,
+	})
 }
 
 // POST /api/posts — creates a new post

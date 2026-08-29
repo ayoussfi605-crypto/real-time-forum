@@ -102,8 +102,22 @@ export async function renderfeed() {
         console.error("Failed to load categories", err);
     }
 
-    // 3. Fetch and render all posts
-    loadPosts();
+    // 3. Pagination state
+    let currentPage = 1;
+    let isLoading = false;
+    let hasMore = true;
+
+    // Fetch first page of posts
+    loadPosts(currentPage);
+
+    // Infinite scroll: load next page when near the bottom of #app
+    app.onscroll = () => {
+        if (isLoading || !hasMore) return;
+        if (app.scrollTop + app.clientHeight >= app.scrollHeight - 200) {
+            currentPage++;
+            loadPosts(currentPage);
+        }
+    };
 
     // 4. Handle Create Post form submission
     document.getElementById("create-post-form").addEventListener("submit", async (e) => {
@@ -146,9 +160,15 @@ export async function renderfeed() {
                 return;
             }
 
-            // Success! Close modal and reload the feed
+            // Success! Reset form, close modal, scroll to top and refresh posts
+            e.target.reset();
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Publish Post";
             closeModal();
-            renderfeed();
+            app.scrollTop = 0;
+            currentPage = 1;
+            hasMore = true;
+            loadPosts(currentPage);
         } catch (err) {
             console.error(err);
             errorBox.textContent = "Something went wrong.";
@@ -156,58 +176,73 @@ export async function renderfeed() {
             submitBtn.textContent = "Publish Post";
         }
     });
-}
 
-// Helper to fetch and display posts
-async function loadPosts() {
-    const container = document.getElementById("posts-container");
-    try {
-        const res = await fetch("/api/posts", { credentials: "include" });
-        if (!res.ok) {
-            container.innerHTML = `<div class="empty-state"><p>Failed to load posts.</p></div>`;
-            return;
-        }
-        
-        const posts = await res.json();
-        
-        if (posts.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div style="font-size: 48px; margin-bottom: 16px;">💬</div>
-                    <h3>No posts yet</h3>
-                    <p>Be the first to start a discussion!</p>
-                </div>`;
-            return;
-        }
+    // Helper to fetch and display posts (with pagination)
+    async function loadPosts(page) {
+        const container = document.getElementById("posts-container");
+        isLoading = true;
 
-        container.innerHTML = posts.map(post => `
-            <div class="modern-post-card" data-id="${post.id}">
-                <div class="card-header">
-                    <div class="author-avatar">${escapeHtml(post.author.charAt(0).toUpperCase())}</div>
-                    <div class="author-info">
-                        <span class="author-name">@${escapeHtml(post.author)}</span>
-                        <span class="post-time">${timeAgo(new Date(post.created_at))}</span>
+        try {
+            const res = await fetch(`/api/posts?page=${page}`, { credentials: "include" });
+            if (!res.ok) {
+                if (page === 1) {
+                    container.innerHTML = `<div class="empty-state"><p>Failed to load posts.</p></div>`;
+                }
+                return;
+            }
+            
+            const data = await res.json();
+            const posts = data.posts;
+            hasMore = data.hasMore;
+            
+            // First page: clear the spinner / old content
+            if (page === 1 && posts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 48px; margin-bottom: 16px;">💬</div>
+                        <h3>No posts yet</h3>
+                        <p>Be the first to start a discussion!</p>
+                    </div>`;
+                return;
+            }
+
+            if (page === 1) {
+                container.innerHTML = "";
+            }
+
+            posts.forEach(post => {
+                // Avoid duplicate card if already present in DOM
+                if (container.querySelector(`[data-id="${post.id}"]`)) return;
+
+                const card = document.createElement("div");
+                card.className = "modern-post-card";
+                card.setAttribute("data-id", post.id);
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="author-avatar">${escapeHtml(post.author.charAt(0).toUpperCase())}</div>
+                        <div class="author-info">
+                            <span class="author-name">@${escapeHtml(post.author)}</span>
+                            <span class="post-time">${timeAgo(new Date(post.created_at))}</span>
+                        </div>
                     </div>
-                </div>
-                <h3 class="post-title">${escapeHtml(post.title)}</h3>
-                <p class="post-preview">${escapeHtml(post.content.length > 150 ? post.content.substring(0, 150) + '...' : post.content)}</p>
-                <div class="post-tags">
-                    ${post.categories.map(c => `<span class="tag">${escapeHtml(c)}</span>`).join("")}
-                </div>
-            </div>
-        `).join("");
-
-        // Add click events to go to the single post page
-        document.querySelectorAll(".modern-post-card").forEach(card => {
-            card.addEventListener("click", () => {
-                const postId = card.getAttribute("data-id");
-                renderPost(postId);
+                    <h3 class="post-title">${escapeHtml(post.title)}</h3>
+                    <p class="post-preview">${escapeHtml(post.content.length > 150 ? post.content.substring(0, 150) + '...' : post.content)}</p>
+                    <div class="post-tags">
+                        ${post.categories.map(c => `<span class="tag">${escapeHtml(c)}</span>`).join("")}
+                    </div>
+                `;
+                card.addEventListener("click", () => renderPost(post.id));
+                container.appendChild(card);
             });
-        });
 
-    } catch (err) {
-        console.error(err);
-        container.innerHTML = `<div class="empty-state"><p>Error loading posts.</p></div>`;
+        } catch (err) {
+            console.error(err);
+            if (page === 1) {
+                container.innerHTML = `<div class="empty-state"><p>Error loading posts.</p></div>`;
+            }
+        } finally {
+            isLoading = false;
+        }
     }
 }
 

@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
-	"forum/middlewares"
 	db "forum/database"
+	"forum/middlewares"
 	"log"
 	"net/http"
 )
@@ -43,6 +43,12 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		users = append(users, u)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating users:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")

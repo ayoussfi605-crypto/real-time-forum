@@ -33,6 +33,11 @@ func GetCategoriesHandler(w http.ResponseWriter, r *http.Request) {
 		categories = append(categories, c)
 	}
 
+	if err := rows.Err(); err != nil {
+		helpers.SendJSON(w, http.StatusInternalServerError, "Error reading categories")
+		return
+	}
+
 	if categories == nil {
 		categories = []Category{}
 	}

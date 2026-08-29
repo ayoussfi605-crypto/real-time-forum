@@ -118,6 +118,12 @@ func GetPostByIDHandler(w http.ResponseWriter, r *http.Request) {
 			)
 		}
 
+		if err := catRows.Err(); err != nil {
+			catRows.Close()
+			helpers.SendJSON(w, http.StatusInternalServerError, "Failed to iterate categories")
+			return
+		}
+
 		catRows.Close()
 	}
 
@@ -166,6 +172,12 @@ func GetPostByIDHandler(w http.ResponseWriter, r *http.Request) {
 				post.Comments,
 				c,
 			)
+		}
+
+		if err := commentRows.Err(); err != nil {
+			commentRows.Close()
+			helpers.SendJSON(w, http.StatusInternalServerError, "Failed to iterate comments")
+			return
 		}
 
 		commentRows.Close()

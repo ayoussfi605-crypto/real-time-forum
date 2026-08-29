@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
-	"forum/middlewares"
 	db "forum/database"
+	"forum/middlewares"
 	"log"
 	"net/http"
 	"strconv"
@@ -59,7 +59,13 @@ func GetMessagesHandler(w http.ResponseWriter, r *http.Request) {
 		messages = append(messages, m)
 	}
 
-	// The frontend will likely want them in chronological order (oldest first), 
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating messages:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// The frontend will likely want them in chronological order (oldest first),
 	// but we fetched DESC for limit/offset. We can reverse them here or in JS.
 	// Reversing here is easier for the frontend.
 	for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
