@@ -17,6 +17,7 @@ type Client struct {
 	mutex  sync.Mutex
 }
 
+// SafeWriteJSON writes a JSON message to the WebSocket connection in a thread-safe manner.
 func (c *Client) SafeWriteJSON(v interface{}) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()

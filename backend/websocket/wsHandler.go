@@ -28,9 +28,10 @@ var upgrader = websocket.Upgrader{
 }
 
 func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
-
+	
 	userID := r.Context().Value(middlewares.UserIDKey).(int)
 
+	// Upgrade the HTTP connection to a WebSocket connection
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("upgrade error:", err)
@@ -48,12 +49,14 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 
 	onlineUsers := make([]int, 0, len(hub.clients))
 
+	// Collect all unique user IDs of online users
 	for id := range hub.clients {
 		onlineUsers = append(onlineUsers, id)
 	}
 
 	hub.mutex.RUnlock()
 
+	// Send the initial status message to the newly connected client
 	err = client.SafeWriteJSON(WSMessage{
 		Type:        "initial_status",
 		OnlineUsers: onlineUsers,
@@ -66,8 +69,9 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	client.ReadPump(hub)
 }
 
+// ReadPump reads messages from the WebSocket connection and processes them.
 func (c *Client) ReadPump(hub *Hub) {
-
+	// Ensure the client is removed from the hub and the connection is closed when this function exits
 	defer hub.RemoveClient(c.userID, c)
 	defer c.conn.Close()
 
@@ -81,15 +85,16 @@ func (c *Client) ReadPump(hub *Hub) {
 		err = json.Unmarshal(payload, &msg)
 
 		if err != nil {
-			log.Println("invalid message:", err)
+			log.Println("message unmarshal error:", err)
 			continue
 		}
 
+		// Validate message type and content
 		if msg.Type != "chat_message" && msg.Type != "typing" && msg.Type != "stop_typing" {
 			continue
 		}
 
-		// Empty message only matters for chat messages
+		// Ignore empty chat messages
 		if msg.Type == "chat_message" && msg.Content == "" {
 			continue
 		}
@@ -103,6 +108,7 @@ func (c *Client) ReadPump(hub *Hub) {
 		}
 
 		// Server creates timestamp
+		// RFC3339 is a standard format for timestamps in JSON and is widely used in APIs.
 		msg.CreatedAt = time.Now().Format(time.RFC3339)
 
 		hub.HandleMessage(msg)

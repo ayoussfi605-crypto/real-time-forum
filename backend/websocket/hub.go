@@ -11,12 +11,14 @@ type Hub struct {
 	mutex   sync.RWMutex
 }
 
+// NewHub creates a new Hub instance.
 func NewHub() *Hub {
 	return &Hub{
 		clients: make(map[int]map[*Client]bool),
 	}
 }
 
+// AddClient adds a new client to the hub for a specific user ID.
 func (h *Hub) AddClient(userID int, client *Client) {
 	h.mutex.Lock()
 
@@ -31,12 +33,14 @@ func (h *Hub) AddClient(userID int, client *Client) {
 	h.BroadcastStatus(userID, true)
 }
 
+// RemoveClient removes a client from the hub for a specific user ID.
 func (h *Hub) RemoveClient(userID int, client *Client) {
 	h.mutex.Lock()
-
+	// Check if the user has any connections in the hub.
 	if connections, ok := h.clients[userID]; ok {
 		delete(connections, client)
 
+		// If there are no more connections for this user, remove the user from the hub and broadcast offline status.
 		if len(connections) == 0 {
 			delete(h.clients, userID)
 
@@ -50,6 +54,7 @@ func (h *Hub) RemoveClient(userID int, client *Client) {
 	h.mutex.Unlock()
 }
 
+// BroadcastStatus sends a message to all clients about a user's online/offline status.
 func (h *Hub) BroadcastStatus(userID int, online bool) {
 	msg := WSMessage{
 		Type:   "user_status",
@@ -80,6 +85,7 @@ func (h *Hub) BroadcastStatus(userID int, online bool) {
 	}
 }
 
+// clientsForUsers retrieves all unique clients for the given user IDs.
 func (h *Hub) clientsForUsers(userIDs ...int) []*Client {
 	h.mutex.RLock()
 	defer h.mutex.RUnlock()
