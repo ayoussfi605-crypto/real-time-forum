@@ -37,8 +37,6 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn.SetReadLimit(maxMsgSize)
-
 	client := &Client{
 		conn:   conn,
 		userID: userID,

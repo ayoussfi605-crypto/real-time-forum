@@ -9,7 +9,6 @@ import (
 
 const (
 	writeWait  = 10 * time.Second
-	maxMsgSize = 4096
 )
 
 type Client struct {
