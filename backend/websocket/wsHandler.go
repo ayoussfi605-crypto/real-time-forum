@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"unicode/utf8"
 
 	"github.com/gorilla/websocket"
 )
@@ -20,15 +21,18 @@ type WSMessage struct {
 	CreatedAt   string `json:"created_at,omitempty"`
 	OnlineUsers []int  `json:"online_users,omitempty"`
 }
-// check if the origin is allowed to connect
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return r.Header.Get("Origin") == "http://localhost:8080"
-	},
-}
 
+// check if the origin is allowed to connect
+//
+	var upgrader = websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			return r.Header.Get("Origin") == "http://localhost:8080"
+		},
+	}
+
+// ServeWs handles WebSocket requests from clients.
 func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
-	
+
 	userID := r.Context().Value(middlewares.UserIDKey).(int)
 
 	// Upgrade the HTTP connection to a WebSocket connection
@@ -81,7 +85,7 @@ func (c *Client) ReadPump(hub *Hub) {
 			break
 		}
 		var msg WSMessage
-
+		
 		err = json.Unmarshal(payload, &msg)
 
 		if err != nil {
@@ -96,6 +100,12 @@ func (c *Client) ReadPump(hub *Hub) {
 
 		// Ignore empty chat messages
 		if msg.Type == "chat_message" && msg.Content == "" {
+			continue
+		}
+
+		// Reject messages that exceed the maximum length of 4096 characters
+		if msg.Type == "chat_message" &&
+			utf8.RuneCountInString(msg.Content) > 4096 {
 			continue
 		}
 
