@@ -6,8 +6,6 @@ import (
 	"log"
 	"net/http"
 	"time"
-	"unicode/utf8"
-
 	"github.com/gorilla/websocket"
 )
 
@@ -23,12 +21,11 @@ type WSMessage struct {
 }
 
 // check if the origin is allowed to connect
-//
-	var upgrader = websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
-			return r.Header.Get("Origin") == "http://localhost:8080"
-		},
-	}
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return r.Header.Get("Origin") == "http://localhost:8080"
+	},
+}
 
 // ServeWs handles WebSocket requests from clients.
 func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
@@ -61,6 +58,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	hub.mutex.RUnlock()
 
 	// Send the initial status message to the newly connected client
+	// {"type": "initial_status", "online_users": [1, 5, 9]}
 	err = client.SafeWriteJSON(WSMessage{
 		Type:        "initial_status",
 		OnlineUsers: onlineUsers,
@@ -85,7 +83,7 @@ func (c *Client) ReadPump(hub *Hub) {
 			break
 		}
 		var msg WSMessage
-		
+
 		err = json.Unmarshal(payload, &msg)
 
 		if err != nil {
@@ -105,7 +103,7 @@ func (c *Client) ReadPump(hub *Hub) {
 
 		// Reject messages that exceed the maximum length of 4096 characters
 		if msg.Type == "chat_message" &&
-			utf8.RuneCountInString(msg.Content) > 4096 {
+			len(msg.Content) > 4096 {
 			continue
 		}
 

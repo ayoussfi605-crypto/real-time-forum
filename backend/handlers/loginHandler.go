@@ -35,7 +35,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			helpers.SendJSON(w, http.StatusBadRequest, "Please fill all the fields")
 			return
 		}
-
+		// Retrieve the user from the database by nickname or email
 		user, err := db.GetUserByIdentifier(identifier)
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -45,7 +45,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			helpers.SendJSON(w, http.StatusInternalServerError, "Internal Server Error")
 			return
 		}
-		
+		// Compare the provided password with the hashed password from the database
 		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password))
 		if err != nil {
 			helpers.SendJSON(w, http.StatusBadRequest, "Invalid credentials")

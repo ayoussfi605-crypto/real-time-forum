@@ -47,7 +47,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-
+	// placeholder for database insertion logic sql injection safe
 	_, err = db.DB.Exec("INSERT INTO users (nickname, first_name, last_name, age, gender, email, password) VALUES (?, ?, ?, ?, ?, ?, ?)",
 		input.Nickname, input.FirstName, input.LastName, input.Age, input.Gender, input.Email, hashedPassword)
 	if err != nil {
