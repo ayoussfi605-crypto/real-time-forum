@@ -20,7 +20,7 @@ func InitRoutes(hub *ws.Hub) *http.ServeMux {
 	mux.HandleFunc("/logout", handlers.LogoutHandler)
 	
 	// Posts
-	mux.HandleFunc("GET /api/posts", handlers.GetPostsHandler)
+	mux.HandleFunc("GET /api/posts", middlewares.AuthMiddleware(handlers.GetPostsHandler))
 	mux.HandleFunc("POST /api/posts", middlewares.AuthMiddleware(handlers.CreatePostHandler))
 	
 	mux.HandleFunc("GET /api/posts/{id}", middlewares.AuthMiddleware(handlers.GetPostByIDHandler),)
@@ -32,7 +32,7 @@ func InitRoutes(hub *ws.Hub) *http.ServeMux {
 	mux.HandleFunc("POST /api/posts/{id}/comments", middlewares.AuthMiddleware(handlers.CreateCommentHandler))
 
 	// Categories (needed by the "new post" form)
-	mux.HandleFunc("GET /api/categories", handlers.GetCategoriesHandler)
+	mux.HandleFunc("GET /api/categories", middlewares.AuthMiddleware(handlers.GetCategoriesHandler))
 
 	// Chat
 	mux.HandleFunc("GET /api/users", middlewares.AuthMiddleware(handlers.GetUsersHandler))
