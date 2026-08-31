@@ -116,11 +116,18 @@ export async function initChat() {
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => {
             isTyping = false;
-            ws.send(JSON.stringify({ type: "stop_typing", receiver_id: currentChatUserId }));
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: "stop_typing", receiver_id: currentChatUserId }));
+            }
         }, 1500);
     });
 
     document.getElementById("close-chat-btn").addEventListener("click", () => {
+        if (isTyping && currentChatUserId && ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: "stop_typing", receiver_id: currentChatUserId }));
+            isTyping = false;
+            clearTimeout(typingTimeout);
+        }
         document.getElementById("chat-window").classList.add("hidden");
         document.getElementById("typing-indicator").classList.add("hidden");
         currentChatUserId = null;
@@ -230,6 +237,12 @@ function moveUserToTop(userId) {
 }
 
 async function openChat(userId, nickname) {
+    if (isTyping && currentChatUserId && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "stop_typing", receiver_id: currentChatUserId }));
+        isTyping = false;
+        clearTimeout(typingTimeout);
+    }
+    
     currentChatUserId = userId;
     messagesOffset = 0;
     hasMoreMessages = true;
@@ -325,6 +338,11 @@ function escapeHTML(str) {
 }
 
 export function closeChatAndWS() {
+    if (isTyping && currentChatUserId && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "stop_typing", receiver_id: currentChatUserId }));
+        isTyping = false;
+        clearTimeout(typingTimeout);
+    }
     if (ws) {
         ws.close();
         ws = null;
