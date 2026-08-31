@@ -5,11 +5,6 @@
   width: 100%;
 }
 
-/* Hide branding section */
-.auth-branding {
-  display: none;
-}
-
 /* Auth Form Side - full page, centered */
 .auth-form-side {
   flex: 1;
@@ -40,7 +35,7 @@
 }
 
 .auth-card h2 {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 8px;
@@ -132,31 +127,6 @@
   background-size: 14px;
   padding-right: 36px;
   cursor: pointer;
-}
-
-/* Password Toggle */
-.password-group input {
-  padding-right: 48px;
-}
-
-.toggle-password {
-  position: absolute;
-  right: 12px;
-  bottom: 10px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-muted);
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s ease;
-  border-radius: 4px;
-}
-
-.toggle-password:hover {
-  color: var(--text-primary);
 }
 
 /* Input Row (side-by-side fields) */
