@@ -20,7 +20,7 @@ export function navigate(route) {
         
         case "feed":
             updateNavbar();
-            initChat();
+            // initChat();
             renderfeed();
             break;
     }

@@ -2,6 +2,7 @@ import { navigate } from "./navigate.js";
 import { setCurrentUser } from "./state.js";
 import { checkSession } from "./checkSession.js";
 import { updateNavbar } from "./navbar.js";
+import { initChat } from "./chat.js";
 
 export function renderSignIn(){
 
@@ -72,6 +73,7 @@ async function handleSignIn(e){
     await checkSession()
     updateNavbar()
     navigate("feed");
+    initChat();
 
   } catch (err) {
     errorBox.textContent = "Internal Server Error";
