@@ -23,7 +23,7 @@ func ValidateRegisterInput(nickname string, firstName string, lastName string, a
 		return false
 	}
 
-	if age <= 9 || age > 150 {
+	if age < 9 || age > 150 {
 			SendJSON(w, http.StatusBadRequest, "age must be between 9 and 150")
 			return false
 	}

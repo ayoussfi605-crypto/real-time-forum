@@ -158,6 +158,23 @@ function handleWSMessage(msg) {
             if (!msg.online && currentChatUserId === msg.user_id) {
                 document.getElementById("typing-indicator").classList.add("hidden");
             }
+        } else if (msg.online) {
+            // Fetch the freshly sorted list from backend
+            fetch("/api/users")
+                .then(res => res.json())
+                .then(users => {
+                    if (users) {
+                        // Map over the new list, carrying over online status from the old list
+                        chatUsers = users.map(u => {
+                            const existing = chatUsers.find(oldUser => oldUser.id === u.id);
+                            // If it's the brand new user (msg.user_id), mark them online
+                            const isOnline = (u.id === msg.user_id) ? true : (existing ? existing.online : false);
+                            return { ...u, online: isOnline, unread_count: u.unread_count || 0 };
+                        });
+                        renderUserList();
+                    }
+                })
+                .catch(err => console.error(err));
         }
     } else if (msg.type === "chat_message") {
         const currentUser = getCurrentUser();
@@ -175,11 +192,12 @@ function handleWSMessage(msg) {
                 fetch(`/api/messages/${msg.sender_id}/read`, { method: "POST" }).catch(console.error);
             }
         } else {
-            const unreadUserId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
-            const user = chatUsers.find(u => u.id === unreadUserId);
-            if (user) {
-                user.unread_count++;
-                renderUserList();
+            if (msg.sender_id !== currentUser.id) {
+                const user = chatUsers.find(u => u.id === msg.sender_id);
+                if (user) {
+                    user.unread_count++;
+                    renderUserList();
+                }
             }
         }
 
@@ -309,7 +327,7 @@ function appendMessage(msg, append = true) {
     const div = document.createElement("div");
     div.className = `chat-message ${isSent ? 'sent' : 'received'}`;
     
-    const dateStr = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const dateStr = new Date(msg.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     let senderName = isSent ? "You" : (document.getElementById("chat-user-name").textContent);
     

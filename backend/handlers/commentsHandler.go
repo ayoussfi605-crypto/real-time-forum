@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	db "forum/database"
 	"forum/helpers"
@@ -43,6 +44,8 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	// Comment must not be empty
+	input.Content = strings.TrimSpace(input.Content)
+
 	if input.Content == "" {
 		helpers.SendJSON(w, http.StatusBadRequest, "Comment cannot be empty")
 		return
