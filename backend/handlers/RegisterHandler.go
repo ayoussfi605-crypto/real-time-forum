@@ -34,10 +34,10 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	input.Nickname = strings.TrimSpace(input.Nickname)
+	input.Nickname = strings.TrimSpace(strings.ToLower(input.Nickname))
 	input.FirstName = strings.TrimSpace(input.FirstName)
 	input.LastName = strings.TrimSpace(input.LastName)
-	input.Email = strings.TrimSpace(input.Email)
+	input.Email = strings.TrimSpace(strings.ToLower(input.Email))
 	
 	Isvalid:= helpers.ValidateRegisterInput(input.Nickname, input.FirstName, input.LastName, input.Age, input.Gender, input.Email, input.Password, w)
 	if !Isvalid{

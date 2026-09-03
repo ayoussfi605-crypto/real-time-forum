@@ -1,4 +1,6 @@
-import { getCurrentUser } from "./state.js";
+import { getCurrentUser, clearCurrentUser } from "./state.js";
+import { navigate } from "./navigate.js";
+import { updateNavbar } from "./navbar.js";
 
 let ws;
 let chatUsers = []; // Array to hold {id, nickname, online}
@@ -59,14 +61,38 @@ export async function initChat() {
             console.log("WebSocket connected");
         };
 
-        ws.onmessage = (event) => {
+        ws.onmessage = async (event) => {
+            // --- NEW AUTH CHECK ---
+            // Ping the server to ensure the session hasn't been deleted
+            try {
+                const authCheck = await fetch("/me", { credentials: "include" });
+                if (!authCheck.ok) {
+                    // Cookie is dead. Boot them out immediately.
+                    clearCurrentUser();
+                    updateNavbar();
+                    closeChatAndWS();
+                    navigate("signin");
+                    return; // Stop processing the incoming WebSocket message
+                }
+            } catch (err) {
+                console.error("Failed to verify session on receive", err);
+            }
+            // ----------------------
+
             const msg = JSON.parse(event.data);
             handleWSMessage(msg);
         };
 
         ws.onclose = () => {
-            console.log("WebSocket disconnected");
+            console.log("WebSocket disconnected. Attempting to reconnect...");
             ws = null; // allow reconnect next initChat()
+            
+            // Try to reconnect every 3 seconds if the user is still logged in
+            if (getCurrentUser()) {
+                setTimeout(() => {
+                    initChat();
+                }, 3000);
+            }
         };
     }
 
@@ -75,7 +101,7 @@ export async function initChat() {
     listenersAttached = true;
 
     // Chat form submit
-    document.getElementById("chat-form").addEventListener("submit", (e) => {
+    document.getElementById("chat-form").addEventListener("submit", async (e) => {
         e.preventDefault();
         const currentUser = getCurrentUser();
         if (!currentUser) return;
@@ -83,6 +109,25 @@ export async function initChat() {
         const input = document.getElementById("chat-input");
         const content = input.value.trim();
         if (content && currentChatUserId && ws && ws.readyState === WebSocket.OPEN) {
+            
+            // --- NEW AUTH CHECK ---
+            // Ping the server via HTTP to see if the cookie is still valid
+            try {
+                const authCheck = await fetch("/me", { credentials: "include" });
+                if (!authCheck.ok) {
+                    // Cookie is gone or invalid! Kick them out.
+                    clearCurrentUser();
+                    updateNavbar();
+                    closeChatAndWS();
+                    navigate("signin");
+                    return; // Stop the message from sending
+                }
+            } catch (err) {
+                console.error("Failed to verify session", err);
+                return;
+            }
+            // ----------------------
+
             const chatMsg = {
                 type: "chat_message",
                 receiver_id: currentChatUserId,
@@ -204,15 +249,20 @@ function handleWSMessage(msg) {
         const userToMove = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
         moveUserToTop(userToMove);
     } else if (msg.type === "typing") {
-        if (currentChatUserId === msg.sender_id) {
-            const user = chatUsers.find(u => u.id === msg.sender_id);
-            if (user) {
+        const user = chatUsers.find(u => u.id === msg.sender_id);
+        if (user) {
+            user.is_typing = true; // NEW: Save state even if chat is closed
+            if (currentChatUserId === msg.sender_id) {
                 document.getElementById("typing-user").textContent = user.nickname;
                 document.getElementById("typing-indicator").classList.remove("hidden");
                 scrollToBottom();
             }
         }
     } else if (msg.type === "stop_typing") {
+        const user = chatUsers.find(u => u.id === msg.sender_id);
+        if (user) {
+            user.is_typing = false; // NEW: Clear state
+        }
         if (currentChatUserId === msg.sender_id) {
             document.getElementById("typing-indicator").classList.add("hidden");
         }
@@ -274,7 +324,15 @@ async function openChat(userId, nickname) {
     }
     
     document.getElementById("chat-window").classList.remove("hidden");
-    document.getElementById("typing-indicator").classList.add("hidden");
+    
+    // NEW: Check if this specific user was already typing before you opened the chat
+    if (user && user.is_typing) {
+        document.getElementById("typing-user").textContent = nickname;
+        document.getElementById("typing-indicator").classList.remove("hidden");
+    } else {
+        document.getElementById("typing-indicator").classList.add("hidden");
+    }
+
     document.getElementById("chat-user-name").textContent = nickname;
     document.getElementById("chat-messages").innerHTML = "";
     document.getElementById("chat-input").focus();
